@@ -1,111 +1,167 @@
-# 2D Room Builder — UX Research and Redesign (2026-10-26)
+# 2D Room Builder: Mobile-Only UX Research and Redesign (rev. 2, 2026-10-26)
 
-Goal: the manual 2D builder should feel effortless for one person measuring **one room for sound**. Furniture and
-whole-house planning are out of scope. Persona: a 37-year-old musician who records at home, has a tape measure and
-two numbers — **11' 6 1/4"** and **15' 1/8"** — and taps "Build manually".
+This replaces the first revision, which mixed desktop and web tools (Floorplanner web, Capterra/Trustpilot/G2
+reviews, Home Design 3D on Steam, Chief Architect forums). This revision uses **only reviews posted on the
+Apple App Store and Google Play for phone and tablet apps**.
 
-## 1. What people say they enjoy
+## Method and limits
 
-Collected from app-store/review-site feedback and vendor help pages for magicplan, RoomSketcher, Floorplanner,
-Planner 5D, Floor Plan Creator, Floorplans (iPad), Leica DISTO Plan and Measure. Exact "I love that I can…" quotes
-were rare in searchable text; the items below are the recurring themes, with representative paraphrases.
+- About 30 web searches restricted to `apps.apple.com` and `play.google.com`, covering 30+ mobile apps.
+- Direct page downloads from the App Store, Google Play and review aggregators are blocked by this environment's
+  network policy. The review text below therefore comes from the search engine's extracts of those store pages.
+  Quotes are as the search returned them. Store ratings are snapshots and change over time.
+- Excluded: Capterra, G2, Trustpilot, Steam, vendor help pages, and Mac App Store (`mt=12`) listings.
+- Apps covered: magicplan (iOS/Android), Floor Plan Creator (Android), Planner 5D (iOS/Android), RoomSketcher
+  (iPad/Android tablets), 4Plan, DrawPlan, Floor Plan App (Laan Labs), Planit2d, Live Home 3D (iOS), Home Design 3D
+  (iOS/Android), Home Planner AI, Homestyler, HomeByMe, Floor Plan 3D, RoomSketch3D, RoomPlot, RenoPlan, Madory,
+  PlankPlanner, Rooms – Easy Layouts, MeasureSquare Mobile, Moasure, MeasureOn (Bosch), AR Plan 3D, CoreLogic Floor
+  Plan, RoomScan Pro / Classic, 5DPlan, iMeasure, Smart Home Design, Floor Planner: Home Design.
 
-1. **Start from a ready rectangle, then fix the numbers.** magicplan's "Square Room" drops a room in one tap and
-   "dimensions can be adjusted after creation"; its help calls it "fast and simple to use".
-2. **Tap the length and type the real number.** magicplan: "tap the length you want to change, enter the numerical
-   value and tap OK". A RoomSketcher reviewer called drawing walls to precise measurements excellent compared with
-   other platforms.
-3. **"Ease of creating walls of the correct size"** (Floorplanner G2 review), placing windows and doors, and seeing
-   measurements.
-4. **Dragging a corner/junction reshapes both connected walls; dragging a wall resizes the room** (Floorplanner,
-   TechRadar review). Measurements are colour-matched to the drawing.
-5. **Snapping to 90° and 45° with visible guides, plus perpendicular/parallel/point snaps** (Measure, Planoplan,
-   Leica DISTO Plan). Seeing the wall's length and angle *while* drawing.
-6. **"Tap the corners to force a right angle"** after a rough sketch (magicplan user).
-7. **Type in tape or laser measurements** instead of trusting the drawing (magicplan, Floor Plan Creator, BiggerPockets
-   users).
-8. **Lock a measured wall** so later edits cannot change it (Floor Plan Creator: "input and lock the length").
-9. **Instant 3D from the plan** (magicplan reviewers).
-10. **Multi-level undo/redo and automatic saving** (magicplan help; absence is the top complaint elsewhere).
-11. **Drawing with a finger on a phone feels direct** (Floorplans iPad review, DrawPlan).
+## 1. What mobile users enjoy
 
-## 2. What people say they hate
+1. **Typing exact wall lengths.** Live Home 3D (iOS): "the ability to precisely adjust wall lengths, by entering
+   values makes things easier". Home Design 3D's App Store notes added "manually enter the exact size of your walls".
+2. **Live dimensions while dragging.** 4Plan: "smooth to create precise and to-scale walls… inside and outside wall
+   dimensions were displayed by the inch" while lengthening or shortening. Planit2d: "realtime dimension read-out".
+3. **Starting a box from two numbers.** MeasureSquare Mobile's developer points users to "Room by Size", entering two
+   dimensions. Rooms – Easy Layouts: "size a room… to precise measurements".
+4. **Speed for a simple plan.** RenoPlan: a basic plan done "in a few minutes with very little practice". magicplan
+   (iOS): a basic room "in under a minute". RoomScan Classic: "effortless… loved it".
+5. **Laser meter input.** Floor Plan Creator and magicplan (Bosch, Leica Disto, Hilti, Stabila); RenoPlan: "laser
+   and AR measuring made it easy".
+6. **Locking measured walls.** Floor Plan Creator: "lock length and position of walls… to prevent unwanted changes".
+   A Planner 5D (iOS) reviewer was frustrated without wall-locking.
+7. **Fractional inches.** PlankPlanner added mixed fractions and 1/8" input after users asked to type inches.
+8. **Simple, intuitive tools.** RoomPlot: "the first app… intuitive and easy to use"; Floor Planner (Android):
+   "very easy to use"; Planner 5D: "about ten minutes to get the hang of".
+9. **Measurements always visible.** Rooms – Easy Layouts reviewer: wished measurements were "visible without
+   pressing on them" (praise for apps that do this).
+10. **Undo arriving as a fix.** Planit2d reviewers credited the 2024 undo/redo update.
 
-1. **Snapping that fights you** — "it will snap to a point that messes up the room dimension" (Home Design 3D);
-   "snapping (on or off) makes a wall jump to a certain point… I can't make sense of why" (Floorplanner board).
-2. **No fine nudge** — "bring back the nudge" (DesignFiles feedback board).
-3. **Editing one wall drags others unexpectedly** — "moving or modifying a wall would take other walls with it"
-   (Planner 5D, Capterra).
-4. **Walls go crooked or come apart** — "straight walls have a curve when they do not", "wall parts… dislodged"
-   (Floorplanner, Trustpilot); corners that "wouldn't align" (Planner 5D).
-5. **Near-miss angles** — dragging leaves "90.1124984° angled wall nonsense" (Chief Architect/Home Designer forum).
-6. **Awkward measurement entry** — plan in metres but edits demanded in cm (Floorplanner); typed formats rejected.
-7. **Doors and windows "skip around once added to a wall"** (Planner 5D).
-8. **No undo** — users restart projects after one accidental touch (Planit2d reviews).
-9. **Crashes and lost work** — "lost hundreds of hours" (Floorplans Pro reviews).
-10. **Hidden features and learning curve** — "not immediately obvious" (RoomSketcher reviewers).
-11. **Paywalls, subscriptions, ads, watermarks** (magicplan, Planner 5D, Floor Plan Creator reviews).
-12. **Cramped phone editing** — controls covering the drawing, tiny targets, hard to move rooms on mobile
-    (Floorplanner Trustpilot).
+## 2. What mobile users hate
 
-## 3. What the good builders have in common
+1. **Can't hit an exact length by dragging.** RoomSketcher (tablet): "instead of typing in '11 feet' the best I could
+   get was 10' 10.8"". magicplan (Android): wanted an 8-ft wall but "could only measure 7 ft or 9 ft".
+2. **No way to type a length at all.** 4Plan: "could not type in how long a wall is… the software sometimes changed
+   their numbers". DrawPlan: "no way to set accurate scaled measurements on walls". Planit2d: asks to type
+   dimensions, "sometimes you have to literally move a room out of the house to fix the size". Floor Plan App: camera
+   is "the only way to input info".
+3. **Rounding that lies.** Floor Plan App: "a 6'7" wall displayed as 7'".
+4. **One edit moves other walls.** Planner 5D (iOS): "changing length input of the walls scales the whole thing from
+   both ends, and affects all other measure"; without locks "every small edit changed other dimensions". Floor Plan 3D:
+   moving a door made walls "freak out and extend". magicplan: after zooming out, "walls and dimensions of adjacent
+   rooms were all wrong".
+5. **Snapping that fights you.** Floor Plan Creator: walls "do not snap together without the details and layout
+   changing… very frustrating with the 'snap to' default". Live Home 3D: "snapping is a little finicky", walls snap and
+   disappear. Home Planner AI: walls move and snap in frustrating ways.
+6. **Fine moves impossible with a finger.** Live Home 3D: "when trying to move an item a tiny bit, it moves A LOT";
+   iPad users ask for a nudge control. Moasure: "editing points and lines on a 6 in screen with big fingers is very
+   troublesome". Planner 5D: small items expand instead of moving when dragged.
+7. **Accidental edits with no undo.** Floor Plan 3D: no undo, "had to restart"; another lost two hours. AR Plan 3D:
+   "click in the wrong spot, and it moves walls". Planit2d: accidental moves took 5–10 minutes to fix. CoreLogic: undo
+   only for the last action.
+8. **Can't tell whether corners are square.** PlankPlanner: "no clear way to verify… corners are exactly 90 degrees";
+   the grid is "hard to see".
+9. **Lost work and crashes.** Floor Plan App: crashes, no auto-save. magicplan (Android): non-rectangular rooms
+   "freeze… and lose my progress". HomeByMe: retry wiped hours of work.
+10. **Paywalls on basics.** Home Planner AI: setting exact room measurements requires payment. DrawPlan: saved plans
+    locked behind a subscription. iMeasure: Pro needed before measuring. Floor Plan Creator: export moved behind a
+    paywall. Units change paywalled in another app.
+11. **Unclear controls and tap problems.** Smart Home Design: "you don't know what each button represents til you
+    click on it"; sizing buttons "would also move the map". iMeasure: unresponsive corner buttons.
+12. **Navigation fights editing.** 5DPlan: pinch-zoom "VERY sensitive". Home Planner AI: moving around "seems to zoom
+    in". Homestyler: auto-zoom cuts off corners.
+13. **Phones not supported or cramped.** RoomSketcher: phones unsupported ("only tablets"). Live Home 3D: "a lot to get
+    basic features to function… the limitation of using a phone screen".
 
-- A **canvas that fills the screen** with a light grid; the room drawn with **thick walls and length labels** on
-  every wall, plus **area**.
-- **Direct manipulation**: corner handles and wall drags, pinch-zoom/pan, and a "fit" control.
-- **Selection → contextual panel** (bottom sheet on phones) showing the selected object's exact values.
-- **Tap-to-edit dimensions** with a numeric keypad, as the precision path; drawing is the rough path.
-- **Snap toggle (magnet)** with **visible guide lines** and on-screen length/angle while dragging.
-- **Undo/redo always visible** in the top bar; **autosave**.
-- **Starting templates** (rectangle, L) and a **rectangle-size shortcut**.
-- **Doors/windows attach to a wall** and slide along it.
+## 3. What the mobile builders have in common
 
-## 4. Persona walk-through of the previous OWL builder
+- A full-screen canvas with a grid; walls drawn thick, with length labels on walls.
+- Tap to select; drag corners or walls; pinch to zoom, one finger to pan.
+- A bottom bar or panel for the selected item's properties; the best ones allow typed values.
+- A snap or magnet setting; the better ones expose snap distance or wall locks.
+- Templates or a "room by size" box as the fastest start.
+- Doors and windows attached to walls.
+- Undo/redo at the top (often added late, after complaints).
+- Frequent pain points: phone-sized screens, fine adjustment, and scrolling property panels.
 
-1. Build manually → 12' × 10' planning rectangle. Good start (theme 1).
-2. Tap the bottom length, type `15' 1/8"`. **The far corner moved alone, so the right wall tilted and the room became a
-   trapezoid** (hate 3/4).
-3. Type `11 6 1/4` for the side — **rejected: "Add units"** (hate 6).
-4. A rough corner drag could leave corners at 89.6° (hate 5); the room could grow past the screen edge after typing,
-   making a corner unreachable (hate 12).
+## 4. How OWL's builder maps to these findings
 
-## 5. What changed (implemented, tested)
+| Mobile finding | OWL builder now |
+|---|---|
+| Can't type exact lengths / drag can't hit 11' | Every wall length, opening left/width/right and height can be typed; drags are only the rough path |
+| Rounding lies (6'7" → 7') | Display to 1/16"; the exact typed text is shown back unchanged |
+| One edit moves other walls | "Keep corners square" slides only the next wall; option to move only the far corner; lockable corners |
+| Snap fights you | Predictable room-axis snapping, exact corners, visible guides, haptic tick on engage, one-tap Snap off; typed values never snap |
+| Fine moves impossible | Nudge pad with step menu (1/16" to 1'); fine-gain window gestures; zoom |
+| Big fingers on 6" screen | 22 dp touch radius, readout shown above the canvas (not under the finger), select-first walls |
+| Accidental edits, no undo | Visible Undo/Redo, one step per gesture, persistent history, autosave |
+| Can't tell if corners are square | Square glyph at exact 90° corners, angle labels elsewhere, "Make 90°" |
+| Grid hard to see | Clearer grid with a stronger line every 5 ft (1 m) |
+| Two-number room / room by size | Room size: Length × Width |
+| Fractions | `11 6 1/4`, `11' 6 1/4"`, decimals, metric; live "= 11' 6 1/4" (3.512 m)" preview |
+| Paywalls | None; no sign-in, no ads |
+| Unclear buttons | Text-labelled actions |
+| Scrolling/cramped phone panels | **No scrolling anywhere in the builder** (this revision; see below) |
 
-| Change | Answers | Where |
-|---|---|---|
-| **Room size: Length × Width** card for rectangular rooms — the two tape numbers are the whole job; opposite walls follow. | Love 1, 2, 7 | `PlanEditor.RoomPanel` |
-| **Keep corners square** (default): an exact wall length slides the next wall along, so every angle is preserved. Toggle to "far corner only". | Hate 3, 4 | `Edits.setWallLength(…, LengthMode)` |
-| **Tape shorthand** `11 6 1/4` = 11' 6 1/4"; all earlier formats still work. | Hate 6 | `LengthParser` |
-| **Live interpretation** while typing: `= 11' 6 1/4"  (3.512 m)` or the exact problem. Field opens with the old value selected so typing replaces it. | Hate 6, 10 | `LengthFormat.interpretation`, `InlineField`, `LengthField` |
-| **Walk-around entry**: tap a length on the plan, type, **Next wall →** opens the following wall. List of all walls for non-rectangular rooms. | Love 2, 7 | `InlineField`, `RoomPanel` |
-| **Predictable snapping**: in the room's own axes; a corner locks to an exact square corner when both walls are within 4°; otherwise one wall locks to 0/45/90° and its length steps by ½" (1 cm); otherwise corner alignment. Screen-space tolerance (same feel at any zoom). Typed values never snap. | Love 5, hate 1, 5 | `domain/edit/Snap.kt` |
-| **Snap feedback**: guide lines extended past the corner, a **haptic tick only when a snap engages**, and a "square ✓ / on angle / aligned" note. | Love 5, hate 1 | `PlanEditor`, `PlanCanvas` |
-| **Live readout above the canvas** (never under the finger): both attached wall lengths and the corner angle while dragging; distance moved while dragging a wall; left/width/right for openings. | Love 5, hate 12 | drag HUD |
-| **Corner angle marks**: a square glyph at exact 90° corners, the angle in degrees elsewhere. | Love 6 | `drawCornerMarks` |
-| **Make 90°** button on a selected corner. | Love 6 | `Edits.squareCorner` |
-| **Nudge steps** 1/16", 1/4", 1", 1' (1 mm, 5 mm, 1 cm, 10 cm) for corners and walls. | Hate 2 | `stepPicker` |
-| **View follows typed changes**: if a typed edit pushes a corner off-screen the view refits (never during a drag). | Hate 12 | `PlanEditor` |
-| Compact toolbar (area · perimeter, Snap on/off, + − Fit Rotate) outside the canvas; shapes tucked behind "Start over from a shape…". | Hate 10, 12 | `PlanEditor` |
+## 5. Changes in this revision: a builder with no scrolling
 
-Kept from before: select-first walls, direct corner drags, one undo step per gesture, autosave with failure recovery,
-openings bound to walls with clamped drags, no ads/paywall/sign-in.
+- **Step bar replaces the scrolling tab strip.** It shows "3/7 · Plan ▾" (a menu of all steps) plus a one-tap
+  "Ceiling & 3D →".
+- **Fixed toolbar:** area and perimeter, scale basis, Snap, Fit, and a ⋮ menu. The menu holds zoom in/out, rotate
+  view, units, "Start over" shapes, and Finalize.
+- **The canvas takes all remaining height.** The contextual panel sizes to its content and never scrolls. Rows wrap
+  instead of scrolling sideways.
+- **Room panel:** Room size (Length × Width) for rectangles. A **wall pager** ("◀ Wall 3: 15' 0 1/8" ▶ Edit") shows
+  one wall at a time, so any number of walls fits, and it doubles as list-free accessible selection. Plan status sits
+  on one line with Confirm, and the review notes open in a Details dialog.
+- **Wall panel:** length field and Square switch in one row. Actions (Drag wall, Add corner, Alcove, + Window,
+  + Door, this wall's openings) wrap in one block. A step menu with Move in / Move out sits below.
+- **Corner panel:** angle and Make 90° on one row; a nudge pad with step menu; Lock and Remove.
+- **Opening panel:** Swing and Remove in the title row, then Left / Width / Right, then Height / Sill (or Bottom).
+- **Clearer grid** with major lines.
 
-## 6. Evidence
+Evidence: `planScreenHasNoScrollingAndControlsFitSmallPhone` renders the builder at **360 × 640 dp**. It asserts
+there is no scrollable node in the room, wall and opening panels, and that every control is displayed. The full suite
+is 105 tests (98 domain + 7 rendered UI), all passing; the UI suite passed three consecutive reruns. These are
+JVM-rendered (Robolectric) checks, not a phone.
 
-- Domain (JVM): `BuilderUxTest` — persona dimensions give an exact rectangle (both opposite walls, area); L-room angles
-  preserved; far-corner mode; locks; Make 90°; near-miss drag lands on the exact corner; rotated-room snapping;
-  length stepping; shorthand parsing and interpretation text.
-- Rendered (Robolectric JVM): `personaTypesTwoTapeMeasurementsAndRoomStaysSquare` — types `15' 1/8"` and `11 6 1/4`
-  into Room size, checks walls 3 and 4 read `15' 0 1/8"` / `11' 6 1/4"`, a near-miss corner drag leaves the room
-  exactly square with no extra history step, and Next wall → walks to wall 2.
-- Not yet verified on a phone: haptic feel, snap tolerance tuning (14 dp, 4°) and finger comfort need the OnePlus Open.
+## 6. Not done: needs your decision
 
-## Sources
+- **Bluetooth laser-meter input** is loved on mobile (Floor Plan Creator, magicplan, RenoPlan) but is not in the
+  approved brief. It would be new scope.
+- **Inside vs outside wall dimensions** (4Plan, Planit2d). OWL models the interior room boundary only, which is
+  what acoustics needs. Wall thickness is not modelled.
 
-- magicplan: [Capterra reviews](https://www.capterra.com/p/210335/magicplan/reviews/), [Clockshark review](https://www.clockshark.com/Blog/magicplan-app-review), [Define corners help](https://help.magicplan.app/create-a-room-with-the-define-corners-feature), [Creating rooms](https://help.magicplan.app/creating-rooms-in-magicplan), [Android floor plans](https://help.magicplan.app/creating-floor-plans-in-magicplan-on-your-android-device), [Undo help](https://help.magicplan.app/undo), [Gigazine test](https://www.gigazine.net/gsc_news/en/20190115-magicplan), [G2 review](https://www.g2.com/products/magicplan/reviews/magicplan-review-468038)
-- RoomSketcher: [Trustpilot](https://au.trustpilot.com/review/roomsketcher.com?page=9), [First steps](https://help.roomsketcher.com/hc/en-us/articles/360000202509), [G2](https://g2.com/products/roomsketcher/reviews?page=3)
-- Floorplanner: [Trustpilot](https://at.trustpilot.com/review/floorplanner.com), [TechRadar](https://www.techradar.com/reviews/floorplanner), [G2](https://www.g2.com/products/floorplanner/reviews), [Capterra UK](https://www.capterra.co.uk/reviews/164017/floorplanner)
-- Planner 5D: [Capterra p.5](https://www.capterra.com/p/164022/Planner-5D/reviews/?page=5), [Capterra p.2](https://www.capterra.com/p/164022/Planner-5D/reviews/?page=2), [TechRadar](https://www.techradar.com/reviews/planner-5d)
-- Snapping complaints: [Home Design 3D (Steam)](https://steamcommunity.com/app/420000/discussions/0/1630790506927080867), [DesignFiles "bring back the nudge"](https://designfiles.featurebase.app/p/new-snapping-feature-on-floor-plan-bring-back-the-nudge), [Home Designer crooked walls](https://homedesignersoftware.com/support/article/KB-00311/correcting-crooked-walls-or-lines.html), [Chief Architect forum](https://hometalk.chiefarchitect.com/topic/2194-free-rotating-walls/)
-- Snapping patterns: [Measure right-angle rooms](https://support.measureflooring.com/hc/en-us/articles/1500006479061), [Planoplan snaplines](https://planoplan.com/en/help-center/documentation/project-creation/snapline), [Leica DISTO Plan sketch](https://shop.leica-geosystems.com/sites/default/files/2024-04/02_DISTO%20Plan%20App%20-%20Sketch%20Plan_EN.pdf)
-- Other: [Floor Plan Creator (Softpedia)](https://mobile.softpedia.com/android/Floor-Plan-Creator-Android-Review-854.html), [BiggerPockets](https://biggerpockets.com/posts/user/myersb1), [Planit2d reviews](https://worldsapps.com/reviews-planit2d), [Floorplans Pro reviews](https://justuseapp.com/en/app/445305220/floorplans-pro/reviews), [Floorplans iPad (iMore)](https://www.imore.com/floorplans-ipad-review), [Moasure docs](https://docs.moasure.com/en/moasure-lx1/your-moasure-app/viewing-your-floor-plan), [Best Android floor plan apps](https://bestforandroid.com/floor-plan-creator-apps.md)
+## Sources (App Store / Google Play only)
+
+magicplan [App Store reviews](https://apps.apple.com/us/app/magicplan/id427424432?see-all=reviews), [Google Play](https://play.google.com/store/apps/details?id=com.sensopia.magicplan&hl=en_US) ·
+Floor Plan Creator [Google Play](https://play.google.com/store/apps/details?id=pl.planmieszkania.android&hl=en_US) ·
+Planner 5D [App Store reviews](https://apps.apple.com/au/app/planner-5d-home-design-app/id606173978?see-all=reviews&platform=iphone), [Google Play](https://play.google.com/store/apps/details?id=com.planner5d.planner5d&hl=en_GB) ·
+RoomSketcher [App Store](https://apps.apple.com/us/app/roomsketcher/id1082324789?see-all=reviews), [Google Play](https://play.google.com/store/apps/details?id=com.roomsketcher.homedesigner&hl=en_US) ·
+[4Plan](https://apps.apple.com/us/app/4plan-home-interior-planner/id1570446253) ·
+[DrawPlan](https://apps.apple.com/us/app/drawplan/id1451755778) ·
+[Floor Plan App](https://apps.apple.com/us/app/floor-plan-app/id1350168237?see-all=reviews&platform=iphone) ·
+[Planit2d](https://apps.apple.com/us/app/planit2d/id615328054) ·
+[Live Home 3D](https://apps.apple.com/us/app/live-home-3d-house-design/id1066784070?see-all=reviews&platform=ipad) ·
+Home Design 3D [App Store](https://apps.apple.com/us/app/home-design-3d-draw-plan/id463768717), [Google Play](https://play.google.com/store/apps/details?id=fr.anuman.HomeDesign3D&hl=en) ·
+Home Planner AI [App Store](https://apps.apple.com/us/app/home-planner-ai-room-design-3d/id1076159017?see-all=reviews), [Google Play](https://play.google.com/store/apps/details?id=com.icandesignapp.all&hl=en) ·
+Homestyler [App Store](https://apps.apple.com/us/app/homestyler-ai-room-planner/id601137449?see-all=reviews&platform=ipad), [Google Play](https://play.google.com/store/apps/details?id=com.autodesk.homestyler&hl=en) ·
+[HomeByMe](https://apps.apple.com/us/app/homebyme-house-planner-3d/id1465715066?see-all=reviews&platform=ipad) ·
+[Floor Plan 3D](https://apps.apple.com/us/app/floor-plan-3d-smart3dplanner/id1513694926?see-all=reviews&platform=iphone) ·
+[RoomSketch3D](https://apps.apple.com/us/app/roomsketch3d-floor-plan-maker/id6759799284?see-all=reviews&platform=iphone) ·
+[RoomPlot](https://apps.apple.com/us/app/floor-plan-creator-roomplot/id6744899616) ·
+[RenoPlan](https://apps.apple.com/us/app/renoplan-floor-plan-creator/id1470036992?see-all=reviews&platform=ipad) ·
+[Madory](https://apps.apple.com/in/app/house-design-planner-madory/id1626956309) ·
+[PlankPlanner](https://apps.apple.com/us/app/plankplanner/id6760696463) ·
+[Rooms – Easy Layouts](https://apps.apple.com/us/app/rooms-easy-layouts/id948103171?see-all=reviews&platform=iphone) ·
+MeasureSquare Mobile [App Store](https://apps.apple.com/au/app/measuresquare-mobile/id845027391), [Google Play](https://play.google.com/store/apps/details?id=com.measuresquare.m2droid&hl=en&gl=US) ·
+Moasure [App Store](https://apps.apple.com/us/app/moasure/id1561726410?see-all=reviews&platform=ipad), [Google Play](https://play.google.com/store/apps/details?id=com.moasure.moasureapp&hl=en_US) ·
+[MeasureOn](https://play.google.com/store/apps/details?id=com.bosch.ptmt.measrOn&hl=en_US) ·
+AR Plan 3D [App Store](https://apps.apple.com/us/app/ar-plan-3d-camera-to-plan/id1459846158), [Google Play](https://play.google.com/store/apps/details?id=com.grymala.arplan&hl=en_US) ·
+[CoreLogic Floor Plan](https://apps.apple.com/us/app/corelogic-floor-plan/id1371346094) ·
+[RoomScan Pro](https://apps.apple.com/us/app/roomscan-pro-lidar-floor-plans/id1504050801?see-all=reviews&platform=iphone), [RoomScan Classic](https://apps.apple.com/us/app/roomscan-pro-the-app-that-draws-floor-plans-by-itself/id673673795) ·
+[5DPlan](https://apps.apple.com/us/app/room-scanner-5dplan/id6474450135) ·
+[iMeasure](https://apps.apple.com/us/app/imeasure-floor-plan/id1281387513) ·
+[Smart Home Design](https://play.google.com/store/apps/details?id=com.SoftwareentwicklungKemper.SmartHomeDesign&hl=en_US) ·
+[Floor Planner: Home Design](https://play.google.com/store/apps/details?id=com.floorplanner.homedesign&hl=en_US)

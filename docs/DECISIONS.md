@@ -84,3 +84,7 @@ material owner decision.
 - E-008 (2026-10-26) In feet mode, two bare numbers mean feet then inches (`11 6 1/4` = 11' 6 1/4"); metric mode
   still refuses ambiguous bare pairs. Inputs show a live interpretation before committing.
 - E-009 (2026-10-26) After a typed (non-drag) edit, the plan view refits if any corner leaves the visible canvas.
+- E-010 (2026-10-26) **Owner instruction:** the 2D builder must be fully usable without scrolling. Implemented with a
+  non-scrolling step bar (replacing the scrolling tab strip), a fixed plan toolbar with overflow menu, a canvas that
+  takes the remaining height, wrapping (not scrolling) contextual panels and a one-wall-at-a-time wall pager. Verified by
+  a rendered test at 360 × 640 dp that finds no scrollable node. Research basis revised to mobile-only store reviews.

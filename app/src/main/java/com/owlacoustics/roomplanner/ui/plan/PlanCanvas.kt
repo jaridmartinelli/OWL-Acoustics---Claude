@@ -224,18 +224,25 @@ fun PlanCanvas(
 }
 
 private fun DrawScope.drawGrid(t: ViewTransform, m: RoomModel) {
-    val step = if (m.units == com.owlacoustics.domain.units.DisplayUnits.IMPERIAL) 0.3048 else 0.5
+    // 1 ft (or 0.5 m) lines with a stronger line every 5 ft (or 1 m) so the scale is readable at a glance
+    val imperial = m.units == com.owlacoustics.domain.units.DisplayUnits.IMPERIAL
+    val step = if (imperial) 0.3048 else 0.5
+    val major = if (imperial) 5 else 2
     if (step * t.scale < 8) return
-    val tl = t.toWorld(Offset.Zero); val br = t.toWorld(Offset(size.width, size.height))
-    val tr2 = t.toWorld(Offset(size.width, 0f)); val bl = t.toWorld(Offset(0f, size.height))
-    val xs = listOf(tl.x, br.x, tr2.x, bl.x); val ys = listOf(tl.y, br.y, tr2.y, bl.y)
-    val c = Color(0x22888888)
-    var x = kotlin.math.floor(xs.min() / step) * step
+    val corners = listOf(Offset.Zero, Offset(size.width, 0f), Offset(0f, size.height), Offset(size.width, size.height)).map { t.toWorld(it) }
+    val xs = corners.map { it.x }; val ys = corners.map { it.y }
+    val minor = Color(0x2E888888); val majorC = Color(0x66888888)
+    var k = kotlin.math.floor(xs.min() / step).toLong()
     var n = 0
-    while (x <= xs.max() && n++ < 400) { drawLine(c, t.toScreen(Vec2(x, ys.min())), t.toScreen(Vec2(x, ys.max())), 1f); x += step }
-    var y = kotlin.math.floor(ys.min() / step) * step
-    n = 0
-    while (y <= ys.max() && n++ < 400) { drawLine(c, t.toScreen(Vec2(xs.min(), y)), t.toScreen(Vec2(xs.max(), y)), 1f); y += step }
+    while (k * step <= xs.max() && n++ < 600) {
+        val x = k * step
+        drawLine(if (k % major == 0L) majorC else minor, t.toScreen(Vec2(x, ys.min())), t.toScreen(Vec2(x, ys.max())), if (k % major == 0L) 1.6f else 1f); k++
+    }
+    k = kotlin.math.floor(ys.min() / step).toLong(); n = 0
+    while (k * step <= ys.max() && n++ < 600) {
+        val y = k * step
+        drawLine(if (k % major == 0L) majorC else minor, t.toScreen(Vec2(xs.min(), y)), t.toScreen(Vec2(xs.max(), y)), if (k % major == 0L) 1.6f else 1f); k++
+    }
 }
 
 private val SelectAmber = Color(0xFFE0A100)

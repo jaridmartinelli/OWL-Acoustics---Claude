@@ -11,12 +11,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -128,9 +126,7 @@ fun RoomScreen(c: AppContainer, vm: RoomViewModel, initialStep: Step, onBack: ()
                     else LinearProgressIndicator(Modifier.fillMaxWidth())
                 }
             }
-            PrimaryScrollableTabRow(selectedTabIndex = step.ordinal, edgePadding = 4.dp) {
-                for (s in Step.values()) Tab(step == s, { step = s }, text = { Text(s.label) }, modifier = Modifier.testTag("tab-${s.name}"))
-            }
+            StepBar(step) { step = it }
             Column(Modifier.weight(1f)) {
                 when (step) {
                     Step.CAPTURE -> CaptureScreen(m.id, c.media, c.evidence, c.remoteAnalysis) { step = Step.PLAN }
@@ -186,5 +182,26 @@ fun RenameBar(current: String, onDismiss: () -> Unit, onSave: (String) -> Unit) 
         androidx.compose.material3.OutlinedTextField(text, { text = it }, singleLine = true, label = { Text("Room name") }, modifier = Modifier.weight(1f))
         TextButton({ onSave(text) }, enabled = text.isNotBlank()) { Text("Save") }
         TextButton(onDismiss) { Text("Cancel") }
+    }
+}
+
+/** Non-scrolling step navigation: current step, a menu of all steps, and the next step one tap away. */
+@Composable
+fun StepBar(step: Step, onStep: (Step) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val next = Step.values().getOrNull(step.ordinal + 1)
+    Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        androidx.compose.foundation.layout.Box {
+            TextButton({ open = true }, modifier = Modifier.testTag("steps-menu")) { Text("${step.ordinal + 1}/${Step.values().size} · ${step.label} ▾") }
+            androidx.compose.material3.DropdownMenu(open, { open = false }) {
+                for (s in Step.values()) androidx.compose.material3.DropdownMenuItem(
+                    text = { Text((if (s == step) "✓ " else "") + s.label) },
+                    onClick = { onStep(s); open = false },
+                    modifier = Modifier.testTag("tab-${s.name}"),
+                )
+            }
+        }
+        androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+        if (next != null) TextButton({ onStep(next) }, modifier = Modifier.testTag("next-step")) { Text("${next.label} →", maxLines = 1) }
     }
 }

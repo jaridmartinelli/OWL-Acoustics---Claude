@@ -12,6 +12,9 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -68,6 +71,12 @@ class EditorUiTest {
         rule.waitForIdle()
     }
 
+    private fun goTo(step: String) {
+        rule.onNodeWithTag("steps-menu").performClick()
+        rule.onNodeWithTag("tab-$step").performClick()
+        rule.waitForIdle()
+    }
+
     /** Room creation and list loading run on IO, which Compose idling does not track: wait for the node itself. */
     private fun waitForTag(tag: String, timeoutMs: Long = 8000) {
         rule.waitUntil(timeoutMs) { rule.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
@@ -93,7 +102,7 @@ class EditorUiTest {
 
     @Test fun inlineMeasurementCornerDragUndoRedoAndRecreate() {
         createManualRoom("Studio A")
-        rule.onNodeWithText("Area 120.0 ft²", substring = true).assertExists()
+        rule.onNodeWithText("120.0 ft²", substring = true).assertExists()
         var m = model()
         var t = fit(m)
         // tap the first wall's length label on the canvas and type an exact fraction inline
@@ -155,7 +164,11 @@ class EditorUiTest {
         assertTrue(com.owlacoustics.domain.edit.Edits.isRectangle(m))
         assertEquals(m.walls[0].length, m.walls[2].length, 1e-12)
         assertEquals(m.walls[1].length, m.walls[3].length, 1e-12)
+        // the wall pager shows one wall at a time (no scrolling); step to walls 3 and 4
+        rule.onNodeWithContentDescription("Next wall").performClick()
+        rule.onNodeWithContentDescription("Next wall").performClick()
         rule.onNodeWithText("Wall 3: 15' 0 1/8\"").assertExists()
+        rule.onNodeWithContentDescription("Next wall").performClick()
         rule.onNodeWithText("Wall 4: 11' 6 1/4\"").assertExists()
 
         // a near-miss corner drag snaps back to the exact square corner: no 90.1° walls
@@ -177,8 +190,30 @@ class EditorUiTest {
         rule.onNodeWithTag("inline-hint").assertExists()
         rule.onNodeWithText("= 15' 0 1/8\"  (4.575 m)").assertExists()
         rule.onNodeWithText("Next wall →").performClick()
-        waitFor { (rule.onAllNodesWithTag("inline-measure").fetchSemanticsNodes().isNotEmpty()) && rule.onAllNodesWithText("Wall 2 ·", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+        waitFor { (rule.onAllNodesWithTag("inline-measure").fetchSemanticsNodes().isNotEmpty()) && rule.onAllNodesWithText("Wall 2", useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
         assertTrue(com.owlacoustics.domain.edit.Edits.isRectangle(model()))
+    }
+
+    /** The 2D builder must work without any scrolling, even on a small phone screen. */
+    @Test @Config(sdk = [35], qualifiers = "w360dp-h640dp-xhdpi")
+    fun planScreenHasNoScrollingAndControlsFitSmallPhone() {
+        createManualRoom("Small phone")
+        fun noScroll(where: String) = assertTrue("scrollable container in plan screen ($where)", rule.onAllNodes(hasScrollAction()).fetchSemanticsNodes().isEmpty())
+        noScroll("room panel")
+        for (tag in listOf("undo", "redo", "steps-menu", "snap-toggle", "plan-more", "room-length", "room-width", "confirm-plan", "open-wall", "plan-canvas")) {
+            rule.onNodeWithTag(tag).assertIsDisplayed()
+        }
+        rule.onNodeWithTag("open-wall").performClick()
+        noScroll("wall panel")
+        for (tag in listOf("wall-length-field", "keep-square", "action-move", "action-split", "add-window", "add-door", "step-menu")) rule.onNodeWithTag(tag).assertIsDisplayed()
+        rule.onNodeWithTag("add-door").performClick()
+        waitFor { model().openings.size == 1 }
+        rule.waitUntil(8000) { rule.onAllNodesWithText("Door on wall 1", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+        noScroll("opening panel")
+        rule.onNodeWithText("Swing ⟳").assertIsDisplayed()
+        rule.onNodeWithText("Remove").assertIsDisplayed()
+        rule.onNodeWithText("Sill height", substring = true).assertDoesNotExist() // door shows "Bottom"
+        rule.onNodeWithText("Bottom").assertIsDisplayed()
     }
 
     @Test fun selectFirstWallActionsWindowHybridAndDoorRotation() {
@@ -192,7 +227,8 @@ class EditorUiTest {
         rule.waitForIdle()
         assertEquals(1, state().history.entries.size)
 
-        rule.onNodeWithText("Wall 1: 12' 0\"").performClick()
+        rule.onNodeWithText("Wall 1: 12' 0\"").assertExists()
+        rule.onNodeWithTag("open-wall").performClick()
         rule.onNodeWithTag("add-window").performClick()
         waitFor { model().openings.size == 1 }
         val win = model().openings.single()
@@ -227,7 +263,10 @@ class EditorUiTest {
         // door: tap selects, tap on the highlighted door cycles the drawn swing; aperture unchanged
         rule.onNodeWithText("Wall 2: 10' 0\"").assertDoesNotExist() // panel shows the window now
         canvas().performTouchInput { click(Offset(5f, 5f)) } // background tap clears selection
-        rule.onNodeWithText("Wall 3: 12' 0\"").performClick()
+        rule.onNodeWithContentDescription("Next wall").performClick()
+        rule.onNodeWithContentDescription("Next wall").performClick()
+        rule.onNodeWithText("Wall 3: 12' 0\"").assertExists()
+        rule.onNodeWithTag("open-wall").performClick()
         rule.onNodeWithTag("add-door").performClick()
         waitFor { model().openings.size == 2 }
         val door = model().openings.first { it.kind == OpeningKind.DOOR }
@@ -246,7 +285,8 @@ class EditorUiTest {
         rule.onNodeWithTag("confirm-plan").performClick()
         waitFor { model().planConfirmed }
         // finalization is a reversible state: the room reopens straight into the editor with its history
-        rule.onNodeWithTag("finalize").performScrollTo().performClick()
+        rule.onNodeWithTag("plan-more").performClick()
+        rule.onNodeWithTag("finalize").performClick()
         waitFor { model().finalized }
         rule.onNodeWithTag("back-to-rooms").performClick()
         waitForTag("room-Den")
@@ -254,7 +294,7 @@ class EditorUiTest {
         waitForTag("plan-canvas")
         rule.onNodeWithTag("plan-canvas").assertExists()
         rule.onNodeWithTag("undo").assertIsEnabled()
-        rule.onNodeWithTag("tab-CEILING").performScrollTo().performClick()
+        goTo("CEILING")
         rule.onNodeWithTag("ceiling-FLAT").performClick()
         waitFor { model().ceiling.profile is CeilingProfile.Flat }
         rule.onAllNodesWithText("Still needed: ceiling height").onFirst().assertExists()
@@ -285,7 +325,7 @@ class EditorUiTest {
             s.edit { SetupEdits.moveItem(it, ids["Listener"]!!, Vec2(1.6, 1.9)) }
             for (id in ids.values) s.edit { SetupEdits.setHeight(it, id, com.owlacoustics.domain.model.Measure(1.2, com.owlacoustics.domain.model.Provenance.USER_ENTERED)) }
         }
-        rule.onNodeWithTag("tab-ANALYSIS").performScrollTo().performClick()
+        goTo("ANALYSIS")
         rule.onNodeWithTag("run-analysis").performClick()
         waitFor(20000) { state().currentResult("analysis") != null }
         rule.onNodeWithText("Current for this room revision.").assertExists()
@@ -297,7 +337,7 @@ class EditorUiTest {
         assertEquals(null, state().currentResult("analysis"))
         rule.onNodeWithTag("run-analysis").performScrollTo().assertIsEnabled().performClick()
         waitFor(20000) { state().currentResult("analysis") != null }
-        rule.onNodeWithTag("tab-ACTIONS").performScrollTo().performClick()
+        goTo("ACTIONS")
         rule.onNodeWithTag("run-recommend").performClick()
         waitFor(20000) { state().currentResult("recommendations") != null }
         assertNotNull(rule.onAllNodesWithText("Buy nothing", substring = true).fetchSemanticsNodes().firstOrNull())

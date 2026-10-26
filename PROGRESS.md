@@ -25,7 +25,7 @@ passed; nothing is RUNTIME-TESTED (no emulator) or DEVICE-VERIFIED.
 | Exact units and numeric entry | BUILD-TESTED | Rational storage, ft-in fractions, metric, unknown ≠ 0. |
 | Canonical model, validation, provenance | BUILD-TESTED | Original observations stored outside undo (`evidence.json`). |
 | Manual creation + starting shapes | BUILD-TESTED | 12 × 10 ft planning rectangle, L, alcove, angled. |
-| Canvas editor (select-first walls, corners, split, alcove, angle, inline values, snap, pan/zoom/rotate) | BUILD-TESTED | Redesigned 2026-10-26 from review research (docs/BUILDER_UX_RESEARCH.md): Room size card, keep-corners-square lengths, tape shorthand, live interpretation, walk-around Next, snapping engine with guides/haptics, drag readout, corner marks, Make 90°, nudge steps, auto-refit. Device tuning owed. |
+| Canvas editor (select-first walls, corners, split, alcove, angle, inline values, snap, pan/zoom/rotate) | BUILD-TESTED | Redesigned 2026-10-26 from mobile-only App Store/Google Play review research (docs/BUILDER_UX_RESEARCH.md rev. 2); builder has no scrolling (step bar, fixed toolbar + overflow, wall pager, wrapping panels); Room size card, keep-corners-square lengths, tape shorthand, live interpretation, walk-around Next, snapping engine with guides/haptics, drag readout, corner marks, Make 90°, nudge steps, auto-refit. Device tuning owed. |
 | Windows/doors (anchors, hybrid gestures, swing tap, vertical data) | BUILD-TESTED | |
 | Durable history, autosave, failure recovery, room isolation, job generations | BUILD-TESTED | JVM fault injection; Android disk behaviour owed. |
 | Room management (create/open/rename/confirmed delete) | BUILD-TESTED | |
@@ -47,7 +47,7 @@ passed; nothing is RUNTIME-TESTED (no emulator) or DEVICE-VERIFIED.
 
 ## Evidence for this revision
 
-- Tests: **104 executed, 0 failed — 98 domain JVM tests + 6 Robolectric JVM-rendered UI tests (incl. the persona builder test); UI suite passed 3 consecutive reruns after the builder redesign.**
+- Tests: **105 executed, 0 failed — 98 domain JVM tests + 7 Robolectric JVM-rendered UI tests (incl. persona builder test and a no-scroll check at 360×640 dp); UI suite passed 3 consecutive reruns.**
 - Lint (`:app:lintDebug`): 0 errors, 1 warning (`ObsoleteSdkInt` on `mipmap-anydpi-v26`; renaming the folder made AAPT
   fail to find the adaptive icon, so the folder is kept — E-003), 1 hint (monochrome icon present).
 - Clean-clone rebuild (F-04): **PASS — fresh clone of revision 7fc608b with an empty Gradle home ran tests, lint and assembleDebug successfully. APK bytes differ between builds (not configured for byte-identical output).**
@@ -56,7 +56,7 @@ passed; nothing is RUNTIME-TESTED (no emulator) or DEVICE-VERIFIED.
 - APK: `app/build/outputs/apk/debug/app-debug.apk` · package `com.owlacoustics.roomplanner.dev` · versionCode 1 ·
   versionName 0.1.0-dev · min/target SDK 26/36 · permissions: CAMERA only · `allowBackup=false` with
   data-extraction and legacy full-backup exclusions · signer: Android Debug (this build machine) ·
-  signer certificate SHA-256 `a574fd584735a1669087c1a0f5541b91f512f6d3def2243313324d929ffc8fb3` · APK SHA-256 `7ab13df8cd58b6556cb2c62898348a3e2173b7cf4c0a192d226257d2a103d77e` (built from the committed tree of this revision; rebuilding gives different bytes).
+  signer certificate SHA-256 `a574fd584735a1669087c1a0f5541b91f512f6d3def2243313324d929ffc8fb3` · APK SHA-256 `0b97c6a91fb4ec4b2de4c83e2a0e3c65ad091d291bce0c55f0416fdf55e1f0df` (built from the committed tree of this revision; rebuilding gives different bytes).
 - APK scan: no RECORD_AUDIO, no brief/records files, no API keys, no supplier identities.
 
 ## Incidents (consequential, logged once)

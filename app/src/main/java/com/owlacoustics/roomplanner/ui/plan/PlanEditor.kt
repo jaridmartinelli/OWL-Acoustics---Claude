@@ -1,22 +1,27 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.owlacoustics.roomplanner.ui.plan
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
@@ -187,20 +192,11 @@ fun PlanEditor(
 
     var canvasSize by remember { mutableStateOf(Offset.Zero) }
     Column(Modifier.fillMaxSize()) {
-        // view controls and live area live outside the canvas so they never cover geometry or finger targets
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.padding(end = 8.dp)) {
-                Text("Area " + LengthFormat.formatArea(Polygons.area(shown.outline), shown.units) + " · Perimeter " + fmt(Polygons.perimeter(shown.outline), shown.units),
-                    style = MaterialTheme.typography.labelLarge)
-                Text(shown.scale.kind.label, style = MaterialTheme.typography.labelSmall)
-            }
-            FilterChip(snap, { snap = !snap }, { Text(if (snap) "Snap on" else "Snap off") }, modifier = Modifier.testTag("snap-toggle"))
-            val center = canvasSize / 2f
-            TextButton(onClick = { transform = transform?.transformed(center, Offset.Zero, 1.25f, 0f) }, modifier = Modifier.semantics { contentDescription = "Zoom in" }) { Text("+") }
-            TextButton(onClick = { transform = transform?.transformed(center, Offset.Zero, 0.8f, 0f) }, modifier = Modifier.semantics { contentDescription = "Zoom out" }) { Text("−") }
-            TextButton(onClick = { transform = ViewTransform.fit(model.outline, canvasSize.x, canvasSize.y, transform?.rotation ?: 0f) }) { Text("Fit") }
-            TextButton(onClick = { transform = transform?.transformed(center, Offset.Zero, 1f, (Math.PI / 2).toFloat()) }) { Text("Rotate view") }
-        }
+        // fixed toolbar: nothing scrolls; less-used view and room actions live in the overflow menu
+        PlanToolbar(vm, model, shown, snap, { snap = it },
+            onFit = { transform = ViewTransform.fit(model.outline, canvasSize.x, canvasSize.y, transform?.rotation ?: 0f) },
+            onZoom = { z -> transform = transform?.transformed(canvasSize / 2f, Offset.Zero, z, 0f) },
+            onRotate = { transform = transform?.transformed(canvasSize / 2f, Offset.Zero, 1f, (Math.PI / 2).toFloat()) })
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
             val wPx = with(density) { maxWidth.toPx() }; val hPx = with(density) { maxHeight.toPx() }
             LaunchedEffect(wPx, hPx) { canvasSize = Offset(wPx, hPx) }
@@ -340,7 +336,8 @@ fun PlanEditor(
             }
         }
         HorizontalDivider()
-        Column(Modifier.fillMaxWidth().heightIn(max = 300.dp).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp)) {
+        // the contextual panel sizes to its content and never scrolls; the canvas takes the remaining height
+        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp).testTag("plan-panel")) {
             when (val s = sel) {
                 is Sel.Wall -> WallPanel(vm, model, s.id, action, { action = it }, { newSel -> sel = newSel }, keepSquare, { keepSquare = it }, stepIdx) { stepIdx = it }
                 is Sel.Vertex -> VertexPanel(vm, model, s.id, stepIdx) { stepIdx = it }
@@ -388,14 +385,56 @@ private fun InlineField(e: InlineEdit, wPx: Float, hPx: Float, units: DisplayUni
 private val STEPS_IMPERIAL = listOf(0.0254 / 16 to "1/16\"", 0.0254 / 4 to "1/4\"", 0.0254 to "1\"", 0.3048 to "1'")
 private val STEPS_METRIC = listOf(0.001 to "1 mm", 0.005 to "5 mm", 0.01 to "1 cm", 0.1 to "10 cm")
 
+/** Compact step-size selector (dropdown) for nudges; returns the chosen step in metres. */
 @Composable
-private fun stepPicker(u: DisplayUnits, idx: Int, set: (Int) -> Unit): Double {
+private fun stepMenu(u: DisplayUnits, idx: Int, set: (Int) -> Unit): Double {
     val steps = if (u == DisplayUnits.IMPERIAL) STEPS_IMPERIAL else STEPS_METRIC
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text("Step", style = MaterialTheme.typography.labelLarge)
-        steps.forEachIndexed { i, (_, label) -> FilterChip(i == idx, { set(i) }, { Text(label) }) }
+    val cur = idx.coerceIn(steps.indices)
+    var open by remember { mutableStateOf(false) }
+    Box {
+        OutlinedButton({ open = true }, contentPadding = PaddingValues(horizontal = 10.dp), modifier = Modifier.testTag("step-menu")) { Text("Step ${steps[cur].second} ▾") }
+        DropdownMenu(open, { open = false }) {
+            steps.forEachIndexed { i, (_, label) -> DropdownMenuItem(text = { Text(label) }, onClick = { set(i); open = false }) }
+        }
     }
-    return steps[idx.coerceIn(steps.indices)].first
+    return steps[cur].first
+}
+
+@Composable
+private fun PlanToolbar(
+    vm: RoomViewModel, model: RoomModel, shown: RoomModel, snap: Boolean, setSnap: (Boolean) -> Unit,
+    onFit: () -> Unit, onZoom: (Float) -> Unit, onRotate: () -> Unit,
+) {
+    var menu by remember { mutableStateOf(false) }
+    Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(LengthFormat.formatArea(Polygons.area(shown.outline), shown.units) + " · " + fmt(Polygons.perimeter(shown.outline), shown.units) + " around",
+                style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(shown.scale.kind.label, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        FilterChip(snap, { setSnap(!snap) }, { Text("Snap") }, modifier = Modifier.testTag("snap-toggle").semantics { contentDescription = if (snap) "Snapping on" else "Snapping off" })
+        TextButton(onFit) { Text("Fit") }
+        Box {
+            TextButton({ menu = true }, modifier = Modifier.testTag("plan-more").semantics { contentDescription = "More options" }) { Text("⋮") }
+            DropdownMenu(menu, { menu = false }) {
+                DropdownMenuItem(text = { Text("Zoom in") }, onClick = { onZoom(1.25f); menu = false })
+                DropdownMenuItem(text = { Text("Zoom out") }, onClick = { onZoom(0.8f); menu = false })
+                DropdownMenuItem(text = { Text("Rotate view 90°") }, onClick = { onRotate(); menu = false })
+                HorizontalDivider()
+                DropdownMenuItem(text = { Text((if (model.units == DisplayUnits.IMPERIAL) "✓ " else "") + "Feet and inches") },
+                    onClick = { vm.edit { Edits.finish(it, it.copy(units = DisplayUnits.IMPERIAL), "Show feet and inches") }; menu = false })
+                DropdownMenuItem(text = { Text((if (model.units == DisplayUnits.METRIC) "✓ " else "") + "Metric") },
+                    onClick = { vm.edit { Edits.finish(it, it.copy(units = DisplayUnits.METRIC), "Show metres") }; menu = false })
+                HorizontalDivider()
+                for (sh in StartShape.values()) DropdownMenuItem(text = { Text("Start over: ${sh.label}") }, onClick = {
+                    vm.edit { Edits.replaceOutline(it, Templates.outline(sh), Provenance.PLANNING, "Start from ${sh.label}") }; menu = false
+                })
+                HorizontalDivider()
+                DropdownMenuItem(text = { Text(if (model.finalized) "Mark room as draft" else "Finalize room") }, modifier = Modifier.testTag("finalize"),
+                    onClick = { vm.edit { Workflow.setFinalized(it, !model.finalized) }; menu = false })
+            }
+        }
+    }
 }
 
 private fun cornerHud(m: RoomModel, vertexId: String, engaged: Set<Snap.Kind>): String {
@@ -429,41 +468,37 @@ private fun WallPanel(
     val w = m.wall(id) ?: return
     val u = m.units
     val mode = if (keepSquare) Edits.LengthMode.KEEP_ANGLES else Edits.LengthMode.FAR_CORNER
-    Text("Wall ${w.index + 1} · ${display(w.length, m.entries["wall:$id:length"], u)}", style = MaterialTheme.typography.titleSmall)
-    LengthField("Length", w.length, m.entries["wall:$id:length"], u, allowUnknown = false, modifier = Modifier.testTag("wall-length-field")) { e ->
-        e?.let { v -> vm.edit { Edits.setWallLength(it, id, v, mode) } }
-    }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text("Keep corners square", style = MaterialTheme.typography.bodyMedium)
-            Note(if (keepSquare) "The next wall slides with this one, so every angle stays the same." else "Only the far corner moves; the next wall may tilt.")
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Wall ${w.index + 1}", style = MaterialTheme.typography.titleSmall)
+        LengthField("Length", w.length, m.entries["wall:$id:length"], u, Modifier.weight(1f).testTag("wall-length-field"), allowUnknown = false) { e ->
+            e?.let { v -> vm.edit { Edits.setWallLength(it, id, v, mode) } }
         }
-        Switch(keepSquare, setKeepSquare, modifier = Modifier.testTag("keep-square"))
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Switch(keepSquare, setKeepSquare, modifier = Modifier.testTag("keep-square").semantics { contentDescription = "Keep corners square" })
+            Text(if (keepSquare) "Square" else "Free", style = MaterialTheme.typography.labelSmall)
+        }
     }
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    val before = m.openings.map { it.id }.toSet()
+    val selectNew = { vm.state?.value?.model?.openings?.firstOrNull { it.id !in before }?.let { select(Sel.Opening(it.id)) }; Unit }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         FilterChip(action == WallAction.MOVE, { setAction(if (action == WallAction.MOVE) WallAction.NONE else WallAction.MOVE) }, { Text("Drag wall") }, modifier = Modifier.testTag("action-move"))
         FilterChip(action == WallAction.SPLIT, { setAction(if (action == WallAction.SPLIT) WallAction.NONE else WallAction.SPLIT) }, { Text("Add corner") }, modifier = Modifier.testTag("action-split"))
-        AssistChip({ vm.edit { Edits.addAlcove(it, id, w.length / 2, minOf(0.9144, w.length / 2), 0.6096) } }, { Text("Add alcove") })
-        // the new opening becomes the selection so its live left/width/right values are shown straight away
-        val before = m.openings.map { it.id }.toSet()
-        val selectNew = { vm.state?.value?.model?.openings?.firstOrNull { it.id !in before }?.let { select(Sel.Opening(it.id)) }; Unit }
-        AssistChip({ vm.edit(selectNew) { Openings.add(it, id, OpeningKind.WINDOW) } }, { Text("Add window") }, modifier = Modifier.testTag("add-window"))
-        AssistChip({ vm.edit(selectNew) { Openings.add(it, id, OpeningKind.DOOR) } }, { Text("Add door") }, modifier = Modifier.testTag("add-door"))
+        AssistChip({ vm.edit { Edits.addAlcove(it, id, w.length / 2, minOf(0.9144, w.length / 2), 0.6096) } }, { Text("Alcove") })
+        AssistChip({ vm.edit(selectNew) { Openings.add(it, id, OpeningKind.WINDOW) } }, { Text("+ Window") }, modifier = Modifier.testTag("add-window"))
+        AssistChip({ vm.edit(selectNew) { Openings.add(it, id, OpeningKind.DOOR) } }, { Text("+ Door") }, modifier = Modifier.testTag("add-door"))
+        for (o in m.openingsOn(id)) AssistChip({ select(Sel.Opening(o.id)) }, { Text(if (o.kind == OpeningKind.WINDOW) "Window" else "Door") })
     }
-    if (action == WallAction.MOVE) Note("Drag the highlighted wall in or out. Its neighbours stretch to follow.")
-    if (action == WallAction.SPLIT) {
-        Note("Tap the wall where the new corner should go, or:")
-        OutlinedButton({ vm.edit { Edits.splitWall(it, id, w.length / 2) }; setAction(WallAction.NONE) }) { Text("Add corner at middle") }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.Center) {
+        val step = stepMenu(u, stepIdx, setStep)
+        OutlinedButton({ vm.edit { Edits.moveWall(it, id, -step) } }, contentPadding = PaddingValues(horizontal = 10.dp)) { Text("Move in") }
+        OutlinedButton({ vm.edit { Edits.moveWall(it, id, step) } }, contentPadding = PaddingValues(horizontal = 10.dp)) { Text("Move out") }
+        if (action == WallAction.SPLIT) OutlinedButton({ vm.edit { Edits.splitWall(it, id, w.length / 2) }; setAction(WallAction.NONE) }, contentPadding = PaddingValues(horizontal = 10.dp)) { Text("Corner at middle") }
     }
-    val step = stepPicker(u, stepIdx, setStep)
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        OutlinedButton({ vm.edit { Edits.moveWall(it, id, -step) } }) { Text("Move in") }
-        OutlinedButton({ vm.edit { Edits.moveWall(it, id, step) } }) { Text("Move out") }
-    }
-    DegreesField("Direction (degrees)", bearingDeg(w.vector)) { d -> d?.let { deg -> vm.edit { Edits.setWallBearing(it, id, deg) } } }
-    val n = m.vertices.size
-    val prev = m.wallAt((w.index + n - 1) % n); val next = m.wallAt((w.index + 1) % n)
-    Note("Connected walls: Wall ${prev.index + 1} ${fmt(prev.length, u)} · Wall ${next.index + 1} ${fmt(next.length, u)}")
+    Note(when (action) {
+        WallAction.MOVE -> "Drag the highlighted wall in or out; its neighbours stretch to follow."
+        WallAction.SPLIT -> "Tap the wall where the new corner goes."
+        WallAction.NONE -> if (keepSquare) "Typing a length slides the next wall, so corners stay square." else "Typing a length moves only the far corner."
+    })
 }
 
 @Composable
@@ -473,23 +508,23 @@ private fun VertexPanel(vm: RoomViewModel, m: RoomModel, id: String, stepIdx: In
     val v = m.vertices[i]
     val u = m.units
     val ang = Edits.interiorAngle(m, i)
-    Text("Corner ${i + 1} · %.1f° · ${v.provenance.label}".format(ang), style = MaterialTheme.typography.titleSmall)
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Corner ${i + 1} · %.1f°".format(ang), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
         Button({ vm.edit { Edits.squareCorner(it, id) } }, enabled = abs(ang - 90.0) > 0.01 && abs(ang - 270.0) > 0.01, modifier = Modifier.testTag("square-corner")) { Text("Make 90°") }
-        Note("Drag the corner on the plan, or nudge it:")
     }
-    val step = stepPicker(u, stepIdx, setStep)
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        OutlinedButton({ vm.edit { Edits.moveVertex(it, id, v.pos + Vec2(-step, 0.0)) } }, modifier = Modifier.semantics { contentDescription = "Nudge left" }) { Text("←") }
-        OutlinedButton({ vm.edit { Edits.moveVertex(it, id, v.pos + Vec2(step, 0.0)) } }, modifier = Modifier.semantics { contentDescription = "Nudge right" }) { Text("→") }
-        OutlinedButton({ vm.edit { Edits.moveVertex(it, id, v.pos + Vec2(0.0, step)) } }, modifier = Modifier.semantics { contentDescription = "Nudge up" }) { Text("↑") }
-        OutlinedButton({ vm.edit { Edits.moveVertex(it, id, v.pos + Vec2(0.0, -step)) } }, modifier = Modifier.semantics { contentDescription = "Nudge down" }) { Text("↓") }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        val step = stepMenu(u, stepIdx, setStep)
+        for ((label, d, desc) in listOf(Triple("←", Vec2(-1.0, 0.0), "Nudge left"), Triple("→", Vec2(1.0, 0.0), "Nudge right"), Triple("↑", Vec2(0.0, 1.0), "Nudge up"), Triple("↓", Vec2(0.0, -1.0), "Nudge down"))) {
+            OutlinedButton({ vm.edit { Edits.moveVertex(it, id, v.pos + d * step) } }, contentPadding = PaddingValues(horizontal = 4.dp),
+                modifier = Modifier.width(52.dp).semantics { contentDescription = desc }) { Text(label) }
+        }
     }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text("Lock this corner", modifier = Modifier.weight(1f))
-        Switch(v.locked, { lk -> vm.edit { Edits.setLocked(it, id, lk) } })
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Switch(v.locked, { lk -> vm.edit { Edits.setLocked(it, id, lk) } }, modifier = Modifier.semantics { contentDescription = "Lock this corner" })
+        Text("Lock", style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.weight(1f))
+        TextButton({ vm.edit { Edits.removeVertex(it, id) } }) { Text("Remove corner") }
     }
-    OutlinedButton({ vm.edit { Edits.removeVertex(it, id) } }) { Text("Remove corner") }
 }
 
 @Composable
@@ -498,30 +533,23 @@ private fun OpeningPanel(vm: RoomViewModel, m: RoomModel, id: String, onRemoved:
     val w = m.wall(o.wallId) ?: return
     val u = m.units
     val name = if (o.kind == OpeningKind.WINDOW) "Window" else "Door"
-    Text("$name on wall ${w.index + 1}" + if (o.provenance == Provenance.PLANNING) " · placeholder size" else "", style = MaterialTheme.typography.titleSmall)
-    if (o.kind == OpeningKind.WINDOW) Note("Drag the centre along the wall to move; drag across the wall for fine symmetric width. Drag an end to resize it; across for ultra-fine.")
-    else Note("Drag along the wall to move. Tap the highlighted door to change its swing drawing. Drag an end to resize.")
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text("$name on wall ${w.index + 1}" + if (o.provenance == Provenance.PLANNING) " · placeholder" else "", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+        if (o.kind == OpeningKind.DOOR) TextButton({ vm.edit { Openings.cycleHanding(it, id) } }) { Text("Swing ⟳") }
+        TextButton({ vm.edit(onRemoved) { Openings.remove(it, id) } }) { Text("Remove") }
+    }
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         LengthField("Left", o.offset, m.entries["opening:$id:left"], u, Modifier.weight(1f), allowUnknown = false) { e -> e?.let { v -> vm.edit { Openings.setLeft(it, id, v) } } }
         LengthField("Width", o.width, m.entries["opening:$id:width"], u, Modifier.weight(1f), allowUnknown = false) { e -> e?.let { v -> vm.edit { Openings.setWidth(it, id, v) } } }
         LengthField("Right", w.length - o.offset - o.width, m.entries["opening:$id:right"], u, Modifier.weight(1f), allowUnknown = false) { e -> e?.let { v -> vm.edit { Openings.setRight(it, id, v) } } }
     }
-    Note("Left + width + right = wall length ${fmt(w.length, u)}. " + if (o.kind == OpeningKind.WINDOW) "Typed width keeps the centre." else "Typed width keeps the left jamb.")
-    if (o.kind == OpeningKind.DOOR) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Swing drawing: ${o.handing.label}", modifier = Modifier.weight(1f))
-            OutlinedButton({ vm.edit { Openings.cycleHanding(it, id) } }) { Text("Change swing") }
-        }
-        Note("This is a drawing choice, not detected evidence.")
-    }
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         MeasureField("Height", o.height, u, Modifier.weight(1f)) { h -> vm.edit { Openings.setVertical(it, id, h, it.openings.first { x -> x.id == id }.bottom) } }
-        MeasureField(if (o.kind == OpeningKind.WINDOW) "Sill height" else "Bottom (0 if at floor)", o.bottom, u, Modifier.weight(1f)) { b ->
+        MeasureField(if (o.kind == OpeningKind.WINDOW) "Sill height" else "Bottom", o.bottom, u, Modifier.weight(1f)) { b ->
             vm.edit { Openings.setVertical(it, id, it.openings.first { x -> x.id == id }.height, b) }
         }
     }
-    Note("Leave blank if unknown. Heights are needed only for the 3D opening and some reflection paths.")
-    OutlinedButton({ vm.edit(onRemoved) { Openings.remove(it, id) } }) { Text("Remove $name") }
+    Note(if (o.kind == OpeningKind.DOOR) "Swing: ${o.handing.label} (a drawing choice). Blank heights = unknown." else "Drag along the wall to move, across it to fine-tune width. Blank heights = unknown.")
 }
 
 @Composable
@@ -530,7 +558,6 @@ private fun RoomPanel(vm: RoomViewModel, m: RoomModel, mode: Edits.LengthMode, s
     val u = m.units
     if (Edits.isRectangle(m)) {
         // the fastest path for most rooms: type the two tape measurements, corners stay square
-        Text("Room size", style = MaterialTheme.typography.titleMedium)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             val w0 = m.walls[0]; val w1 = m.walls[1]
             LengthField("Length", w0.length, m.entries["wall:${w0.id}:length"], u, Modifier.weight(1f).testTag("room-length"), allowUnknown = false) { e ->
@@ -539,50 +566,38 @@ private fun RoomPanel(vm: RoomViewModel, m: RoomModel, mode: Edits.LengthMode, s
             LengthField("Width", w1.length, m.entries["wall:${w1.id}:length"], u, Modifier.weight(1f).testTag("room-width"), allowUnknown = false) { e ->
                 e?.let { v -> vm.edit { Edits.setWallLength(it, it.walls[1].id, v, Edits.LengthMode.KEEP_ANGLES) } } }
         }
-        Note("Opposite walls follow automatically. Not a rectangle? Tap a corner or wall on the plan to reshape it.")
-    } else {
-        Text("Walls", style = MaterialTheme.typography.titleMedium)
-        Note("Walk around the room and type each wall. On the plan, tap a length and use Next wall →.")
-        for (w in m.walls) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton({ select(Sel.Wall(w.id)) }, Modifier.width(84.dp)) { Text("Wall ${w.index + 1}") }
-                LengthField("Length", w.length, m.entries["wall:${w.id}:length"], u, Modifier.weight(1f), allowUnknown = false) { e ->
-                    e?.let { v -> vm.edit { Edits.setWallLength(it, w.id, v, mode) } } }
-            }
-        }
     }
-    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        for (w in m.walls) AssistChip({ select(Sel.Wall(w.id)) }, { Text("Wall ${w.index + 1}: ${display(w.length, m.entries["wall:${w.id}:length"], u)}") })
-    }
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Units", style = MaterialTheme.typography.labelLarge)
-        FilterChip(u == DisplayUnits.IMPERIAL, { vm.edit { Edits.finish(it, it.copy(units = DisplayUnits.IMPERIAL), "Show feet and inches") } }, { Text("ft / in") })
-        FilterChip(u == DisplayUnits.METRIC, { vm.edit { Edits.finish(it, it.copy(units = DisplayUnits.METRIC), "Show metres") } }, { Text("metric") })
-    }
-    var showShapes by rememberSaveable { mutableStateOf(false) }
-    TextButton({ showShapes = !showShapes }) { Text(if (showShapes) "Hide starting shapes" else "Start over from a shape…") }
-    if (showShapes) Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        for (s in StartShape.values()) AssistChip({
-            vm.edit { Edits.replaceOutline(it, Templates.outline(s), Provenance.PLANNING, "Start from ${s.label}") }
-        }, { Text(s.label) })
-    }
-    HorizontalDivider(Modifier.padding(vertical = 6.dp))
-    if (m.planConfirmed && stages.planReviewed) {
-        Text("Floor plan confirmed (the drawing, not a survey).", style = MaterialTheme.typography.bodyMedium)
-    } else {
-        stages.planBlocking.forEach { Text("• " + it.message, color = MaterialTheme.colorScheme.error) }
-        stages.planReview.forEach { Text("• " + it.message, style = MaterialTheme.typography.bodySmall) }
-        Button({ vm.edit { Workflow.confirmPlan(it) } }, enabled = stages.planBlocking.isEmpty(), modifier = Modifier.testTag("confirm-plan")) {
-            Text("Confirm floor plan")
-        }
-        Note("A ceiling height is not needed to confirm the plan.")
-    }
-    HorizontalDivider(Modifier.padding(vertical = 6.dp))
+    // one wall at a time, so any number of walls fits without scrolling
+    var idx by rememberSaveable { mutableStateOf(0) }
+    val n = m.vertices.size
+    val wi = idx.coerceIn(0, n - 1)
+    val w = m.wallAt(wi)
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(if (m.finalized) "Room finalized. You can still edit it, and undo/redo keeps its full history." else "Finalize when you are happy with this room. It stays editable.",
-            Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
-        OutlinedButton({ vm.edit { Workflow.setFinalized(it, !m.finalized) } }, modifier = Modifier.testTag("finalize")) {
-            Text(if (m.finalized) "Mark as draft" else "Finalize room")
+        TextButton({ idx = (wi + n - 1) % n }, modifier = Modifier.semantics { contentDescription = "Previous wall" }) { Text("◀") }
+        if (Edits.isRectangle(m)) {
+            Text("Wall ${wi + 1}: ${display(w.length, m.entries["wall:${w.id}:length"], u)}", Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+        } else {
+            LengthField("Wall ${wi + 1} of $n", w.length, m.entries["wall:${w.id}:length"], u, Modifier.weight(1f).testTag("wall-pager-field"), allowUnknown = false) { e ->
+                e?.let { v -> vm.edit { Edits.setWallLength(it, w.id, v, mode) } } }
         }
+        TextButton({ idx = (wi + 1) % n }, modifier = Modifier.semantics { contentDescription = "Next wall" }) { Text("▶") }
+        TextButton({ select(Sel.Wall(w.id)) }, modifier = Modifier.testTag("open-wall")) { Text("Edit") }
     }
+    var why by remember { mutableStateOf(false) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        val status = when {
+            m.planConfirmed && stages.planReviewed -> "Plan confirmed (the drawing, not a survey)"
+            stages.planBlocking.isNotEmpty() -> stages.planBlocking.first().message
+            stages.planReview.isNotEmpty() -> "${stages.planReview.size} note(s) to review"
+            else -> "Ready to confirm — no ceiling height needed"
+        }
+        Text(status, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis,
+            color = if (stages.planBlocking.isNotEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
+        if (stages.planReview.isNotEmpty() || stages.planBlocking.isNotEmpty()) TextButton({ why = true }) { Text("Details") }
+        if (!(m.planConfirmed && stages.planReviewed)) Button({ vm.edit { Workflow.confirmPlan(it) } }, enabled = stages.planBlocking.isEmpty(),
+            modifier = Modifier.testTag("confirm-plan")) { Text("Confirm") }
+    }
+    if (why) AlertDialog(onDismissRequest = { why = false }, title = { Text("Before confirming") },
+        text = { Text((stages.planBlocking + stages.planReview).joinToString("\n\n") { "• " + it.message }) },
+        confirmButton = { TextButton({ why = false }) { Text("OK") } })
 }
