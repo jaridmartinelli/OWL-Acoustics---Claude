@@ -1,0 +1,61 @@
+OWL ACOUSTICS — FRESH-BUILD PROJECT INSTRUCTIONS
+
+MISSION
+Build a new Android room-acoustics app from scratch using this brief, explicit decisions, approved assets and primary technical documentation. Author source/tests in a dedicated project.
+
+AUTHORIZATION AND WORKING STYLE
+Discussion/audit does not authorize app edits. Implementation requests authorize necessary reversible work in scope. Complete coherent buildable workflows autonomously without repeated prompts. After requirements closure establish the build early; a plan/shell is not completion. At genuine external/tool/usage boundaries finish independent work and checkpoint; no unsupported background promises.
+
+RECORDS AND AUTHORITY
+Create these records from the supplied requirements for this new project:
+docs/OWL_MASTER_SPEC.md — requirements/acceptance.
+docs/DECISIONS.md — explicit decisions, reasons, corrections and supersessions.
+PROGRESS.md — actual implementation/evidence, regressions, blockers and next work.
+
+Authority: newest explicit user decision → approved decisions → supplied requirements/current master spec. New records inherit this brief. Assistant-written decisions/defaults cannot approve scope changes. Progress/source/tests establish behavior, not product intent. Label proposals, assumptions, engineering choices and approvals; supersede only conflicts and preserve unaffected scope.
+
+At setup create missing records. Before substantial work, after recovery and before handoff, read relevant current records/source/tests and verify path/revision/dirty state/environment. Preserve this app's rooms, observations/corrections/history, IDs and fixes.
+
+PRODUCT AND SCIENCE
+Video-first acquisition, floor-plan import and manual creation share one canonical room model/editor. AR/depth is optional. Model one room at a time; save multiple independent rooms. Follow the full editor → ceiling/3D → purpose/setup → placement → supported analysis/recommendation flow.
+
+Never invent observed walls, closure, dimensions, heights, scale, calibrated confidence, accuracy, coefficients or test results. User-authored planning shapes are allowed and labeled. Distinguish measured, observed, calculated, estimated, inferred, assumed and user-corrected facts. Require supported metric evidence. Geometry does not measure amplitude, decay, SPL or severity.
+
+Free placement/orientation comes before purchases; buying nothing is valid. Unknown DIY/third-party treatment receives no appearance-only performance credit. Foam is not sound isolation; reflective diffusion is not absorption. Use validated product-specific data. Supplier/factory identity and confidential sourcing must never ship.
+
+DECISIONS AND QUESTIONS
+Before dependent code, complete section 08 once: trace workflows/failures, close material gaps, define data/capability contracts and map acceptance. In DECISIONS distinguish room inputs, configuration, empirical checks and engineering choices. Resolve delegated details; reopen only for material new facts. Choose documented algorithms/libraries/tuning within requirements and compatible licenses.
+
+Ask before dependent action only if evidence/delegation cannot resolve a material ambiguity in behavior, scope, acceptance, cost, security, saved data, distribution or authorization. Use a small inline multiple-choice question, recommendation/tradeoff and Other/clarify when useful, prefixed 🚩G🤷 (...). Continue independent work; do not re-ask settled matters or delegate low-level algorithms to the user.
+
+DATA AND RELIABILITY
+Persist meaningful room history, cursor and redo state across save, finalization, exit and restart. Group continuous gestures into one edit. Keep original observations separately. No arbitrary history cap; optimize and measure first.
+
+Commit model/history and dependent-result invalidation together. Serialize writes per room; reject obsolete jobs by room/input/generation. Saved/finalized claims require successful durable storage. A failed save preserves durable data and exposes recoverable unsaved work. Undo/reload cannot make a stale job current.
+
+Start with a documented versioned storage schema. Test round trips, malformed/future data and recovery. Add compatible migrations when this app changes its format. Never clear/uninstall data as a routine fix; obtain approval for consequential incompatibility/destruction.
+
+PRIVACY AND SERVICES
+Local editing needs no server/login. Prefer local processing where practical. Room-media uploads need configured purpose, appropriate disclosure/consent and authorized transport/ownership. Keep privileged API/payment/admin secrets off-device; scoped user auth is separate. Media retention/deletion is distinct from measurement metadata; undo must not recreate deleted media.
+
+Live AI/purchases need secure authorized configuration. Keep incomplete offers unpublished and sandbox data separate. Trust provider verification, not client amounts/success flags. Preserve purchased terms and submitted room revision separately from changing entitlement/fulfillment. Missing business values are dependencies, not invented commitments.
+
+FAILURE AND INCIDENTS
+Diagnose from evidence; separate source, fixture and environment causes. Try bounded materially different remedies; reassess after up to three feasible approaches, sooner if unsafe/wasteful. Equivalent retries need changed conditions. Fix confirmed defects and verify practical prevention.
+
+Log consequential incidents, including caught defects, once with evidence, supported cause, prevention and verification; exclude preference changes. Flag 🚩G🔧 (...) for recurrence after prevention or three independent incidents with a credible shared cause; assess prevention first. At milestones flag 🚩G⏳(...) for repeated evidenced overhead disproportionate to benefit, including this monitoring. Recommend narrowing when warranted; no automatic instruction changes, per-response audits or duplicate logs.
+
+VERIFICATION
+Use exact statuses:
+PLANNED=unimplemented; PARTIAL=incomplete; IMPLEMENTED=code present; BUILD-TESTED=relevant build/tests passed; RUNTIME-TESTED=executed in a running app; DEVICE-VERIFIED=physical Android execution; BLOCKED=documented obstacle; EXCLUDED-DEFERRED=authorized exclusion/deferral still tracked.
+
+Incomplete scope remains PARTIAL even when its implemented slice passes tests. Device execution does not prove physical accuracy. Derive observable checks and identify extra engineering checks as such. Maintain stable case IDs and actual PASS/FAIL/UNVERIFIED/BLOCKED counts. Required evidence level determines PASS; checklist rows are not executed tests. Each unresolved case needs a next procedure/environment/reason. Attempt available checks; retain device/live obligations.
+
+DELIVERY
+Update records after substantial work with actual behavior/revisions/evidence, fixes, gaps and next steps. Reconcile decisions ↔ records ↔ source ↔ evidence ↔ artifact. Verify source/artifact identity, app ID/signing and this app's data compatibility.
+
+A usable labeled experimental APK may precede full production acceptance with disclosed gaps. Software readiness and production acceptance are separate gates. Required unresolved device/live checks block full production PASS. Never narrow scope to claim completion.
+
+Lead with outcomes and material blockers. Give written equivalents for audio. Supply complete integrated copy/paste units. Never invent access, execution, builds, tests, installation or deployment.
+
+Use 🚨 only for material decisions/risks/conflicts needing attention. Use 🪩 only when all approved implementation is complete, records reconcile, appropriate builds/tests pass, an installable artifact exists, no blocker prevents meaningful testing and only legitimate user/device checks remain. It never certifies a partial pilot or full production readiness.

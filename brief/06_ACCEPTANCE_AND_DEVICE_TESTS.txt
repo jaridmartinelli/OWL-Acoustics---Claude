@@ -1,0 +1,139 @@
+OWL ACOUSTICS — FRESH-BUILD ACCEPTANCE AND DEVICE PLAN
+These are required verification procedures for the new application. No app test is claimed executed by this brief.
+
+HOW TO USE
+Create this new project's acceptance inventory from the cases below. Link each case to the corresponding product requirement and actual source/evidence as authored. Keep stable IDs; split genuine independent subcases where needed without manufacturing favorable counts.
+
+For each executed check record requirement, source revision, environment/input, procedure, expected behavior, actual result and evidence location. If not executed, say so and name the next procedure/prerequisite. A PASS requires actual relevant evidence for the stated source, inputs and environment.
+
+Feature status uses PLANNED / PARTIAL / IMPLEMENTED / BUILD-TESTED / RUNTIME-TESTED / DEVICE-VERIFIED / BLOCKED / EXCLUDED-DEFERRED.
+PLANNED=unimplemented; PARTIAL=incomplete; IMPLEMENTED=code present; BUILD-TESTED=relevant build/tests passed; RUNTIME-TESTED=executed in a running app; DEVICE-VERIFIED=exercised on physical Android; BLOCKED=documented obstacle; EXCLUDED-DEFERRED=authorized exclusion/deferral, still tracked. Scope completeness and achieved evidence are recorded separately.
+Acceptance outcome uses PASS / FAIL / UNVERIFIED / BLOCKED:
+PASS = required outcome observed at its stated level.
+FAIL = known missing/incorrect required behavior.
+UNVERIFIED = insufficient evidence; concrete verification still owed.
+BLOCKED = named prerequisite prevents completing the check.
+A BUILD-TESTED PASS is not physical accuracy or DEVICE-VERIFIED.
+
+The 70 coverage rows are coverage prompts, not 70 executed tests or a complete atomic test count. Map cases to this new project's requirements before execution. Each case records required evidence level, applicability, input/model capability and actual evidence. A composite row passes only when every required subcase reaches its required level; record lower-level passes separately without promoting the aggregate. A partially implemented feature remains PARTIAL even when its existing slice passes build tests.
+
+Required levels follow the claim: source/artifact checks need direct source/artifact inspection; algorithms/serialization need independent reference/round-trip tests; rendered interaction needs running-app evidence; camera, physical dimensions and physical-device behavior need representative hardware/reference evidence; payment integration needs authorized configured provider sandbox/backend and app evidence. Sandbox verification does not authorize live charges. Missing a prerequisite is BLOCKED, not an inapplicable PASS. Explicit exclusions/deferrals need their authority recorded. Coverage rows, requirement groups and executed test counts are different quantities.
+
+For F-40/41, an Other/Special/Mixed editable draft can pass its draft-retention case. Saving every ordinary ceiling as unsupported does not pass the required normal-ceiling implementation or full 3D case. For F-47/48, a deferred advanced solver is not required; evaluate the explicitly supported basic operation and keep required missing integrations incomplete. For F-64/65, a missing quantitative treatment model cannot be concealed behind a generic completed recommendation screen.
+
+A. BASELINE AND REPRODUCIBLE BUILD
+F-01 Initialize a dedicated new project and its records/source/build configuration. Expected: no pre-existing application checkout or progress file is required; unrelated directories are protected.
+F-02 Build from the documented environment using the actual Gradle wrapper/configuration. Expected: relevant tests, lint and APK assembly succeed or concrete logs identify a blocker.
+F-03 Inspect the generated APK application ID, version, checksum and signing certificate. Expected: artifact matches this new source and its documented development/release identity.
+F-04 Rebuild by documented steps in an available clean environment. Expected: reproducible procedure/dependencies, no hidden paths or secrets. Byte-identical output is not assumed unless deliberately configured and verified.
+
+B. ACQUISITION AND SCALE
+F-05 Camera permissions/cold start/denial/regrant. Expected: honest permission flow, functioning preview when allowed and a usable manual/import recovery.
+F-06 Room recording, stop, the initial server-route 60-second clip limit, interruption, re-record, delete and save/reopen. Expected: room-owned private silent video, no microphone permission or automatic public-gallery copy, and no false recording/processing completion.
+F-07 Real observation provider. Expected: representative videos yield actual boundary/opening observations and source-linked candidates; a stub/empty processor cannot pass.
+F-08 Independent viewpoint sufficiency. Expected: repeated static frames do not complete a boundary; genuine supported independent views can; conflicts reopen it.
+F-09 Overlay correspondence. Expected: visible overlays follow actual calibrated image-space evidence, rotation/crop and camera view; no decorative invented walls.
+F-10 Partial topology. Expected: recesses, projections, L/angled walls and unresolved boundaries remain faithfully represented; no forced closure/right angles.
+F-11 Metric scale. Expected: a supported metric anchor/depth/baseline/user reference justifies scale; calibrated intrinsics/relative pose alone do not pass. Absent/contradictory scale is unknown/conflicted, not guessed. Test planning templates separately from claimed physical measurements.
+F-12 Local reference conflict. Expected: bad plate/door subtype or contradictory reference is surfaced and localized; supported unrelated regions remain usable.
+F-13 Targeted recapture. Expected: unresolved region guidance requests a useful local correction and merges evidence without wiping manual corrections.
+F-14 No-AR path. Expected: normal video/manual/import operation does not require ARCore; optional depth capability is separately detected/tested.
+F-15 Imported plan. Expected: image/PDF source, scale and selected/traced room produce the shared editable model with provenance. Test selected page/room, known-segment calibration, conflicting references, undoable recalibration, unreadable/unsupported documents and clearly labeled assisted extraction.
+F-16 Real server-assisted analysis when configured. Expected: explicit consent/authentication, bounded input, actual processing and conservative response import into the correct room. A mocked response verifies only the contract.
+
+C. GEOMETRY AND EDITOR
+F-17 Shared manual/capture/import model. Expected: each enters the same editor and supports later correction/save/reopen without data drift.
+F-18 Representative outlines. Expected: rectangle, six-corner L, alcove and angled room remain valid connected polygons. Reject crossed/zero-length/disconnected invalid committed shapes.
+F-19 Wall selection/actions. Expected: tapping selects/highlights; wall movement or split requires intended action; corner editing remains discoverable.
+F-20 Structural editing. Expected: add/move/remove vertex, split wall, alcove and wall/corner adjustment update true geometry and retain/revalidate attached openings.
+F-21 Numeric length/angle edits. Expected: anchored/moved corners are visible; neighboring lengths/area match coordinates; explicit locks are respected. Corrections preserve original observations without treating every old observation as an automatic immovable lock. Invalid exact entries preserve the prior committed value.
+F-22 Unit and fractional entry. Expected: exact decimal/fraction text/value/unit survives repeated metric/imperial conversion without cumulative drift. Test mixed feet/inches, zero denominators, non-finite/invalid input, zero offsets versus unknown and geometry tolerances. Exact entry is not snapped or silently clipped.
+F-23 Live area/dimensions. Expected: independent polygon-area reference agrees during/after edits, including rotated and irregular shapes; no bounding-box area substitution.
+F-24 Snapping. Expected: alignment is visible, disable-able and suitable across zoom levels; exact typed values bypass quantization; canceled drag restores the prior state.
+F-25 Inline editing. Expected: tapping measurement edits it in place with usable keyboard/IME layout and no separate modal measurement dialog.
+F-26 View navigation. Expected: pan/pinch/zoom/fit/rotation preserve object geometry and stable finger targeting; viewport does not rescale under an active geometry drag.
+F-27 Window Hybrid. Expected: wall-local parallel/perpendicular behavior works on angled/rotated walls; center width preserves center, endpoint sizing preserves the other jamb; locked intent/fine gain/boundary feedback/cancellation and live left/width/right all work in the running app. Numeric left/right keeps width; exact width follows its documented anchor.
+F-28 Door movement/rotation/width. Expected: generous rotate tap cycles labeled single-leaf hinge/swing choices, starting unknown where appropriate; dragging does not also rotate; endpoint and numeric-width anchors keep the aperture on its parent wall. A view rotation does not change physical handing.
+F-29 Opening constraints. Expected: left + width + right equals wall length; reject overlap/out-of-wall ranges; no unapproved arbitrary clearances; linked openings survive valid wall operations.
+F-30 Vertical openings. Expected: unknown sill/bottom/height stays unknown; supplied dimensions persist and fit local geometry; missing heights do not block independent 2D review.
+
+D. HISTORY, PERSISTENCE AND RECOVERY
+F-31 Meaningful undo. Expected: many pointer samples in one gesture create one meaningful durable step and proportionate correction events, with original observations retained.
+F-32 Save/finalize/reopen history. Expected: undo/redo cursor and forward branch survive save, finalization, exit and actual process restart.
+F-33 New edit after undo. Expected: only the edited room's forward redo branch is replaced; other rooms and source evidence remain untouched.
+F-34 Multiple-room isolation. Expected: different geometries/histories/media stay separate; late capture/network callbacks cannot write into the currently viewed wrong room.
+F-35 Autosave/storage failure. Expected: model/history/invalidation remain consistent; Saved/Finalized requires durable persistence. Out-of-order writes cannot replace newer data. Test full/unwritable storage/interrupted writes, unsaved retry/discard, prior-byte recovery and the absence of a changed-geometry/old-current-analysis interval.
+F-36 New persistence schema. Expected: version-1 rooms/history round-trip accurately; corrupt and unknown-future files are preserved without silent overwrite. Add migration fixtures when this new app changes its own stored format; no external saved-room dataset is a prerequisite.
+F-37 Long-history performance. Expected: declare representative workload, engineering performance budget and rationale before grading; record edit/vertex counts, stored bytes, UI-frame/save/reopen measurements and device/environment. No main-thread bulk history serialization or arbitrary retention cap may disguise a problem. A budget change after failure needs its reason retained.
+F-38 Interrupted editing/navigation. Expected: Back, orientation, background/recreation and reopening a finalized room preserve the applicable model/history and provide direct edit access.
+
+E. CEILING AND 3D
+F-39 Floor-plan confirmation before height. Expected: valid 2D plan advances while height remains unknown; the ceiling step requests required dimensions.
+F-40 Ceiling coverage. Expected: each main shape/detail is represented or explicitly an incomplete editable draft; no default 8-foot height or assumed symmetry/curve.
+F-41 Faithful profile geometry. Expected: independently checked profile dimensions/orientation/ridge/inset and actual irregular polygon match stored values and rendered geometry.
+F-42 Aperture/partial model. Expected: supported opening heights produce corresponding geometry; unsupported portions remain clearly partial, not fake full solids.
+F-43 2D/3D consistency. Expected: edits/view switches/save/reopen use the same canonical endpoints, units and ceiling/openings; no drifting copies.
+F-44 Special/mixed draft. Expected: save/exit/reopen/edit/undo works while expert input is pending; editing is not payment-gated.
+
+F. PURPOSE, ACOUSTICS AND RECOMMENDATIONS
+F-45 Purpose/setup. Expected: all approved purpose choices, relevant inputs/cardinality and empty-room proposals work; visible equipment does not determine purpose.
+F-46 Constraints/free placement. Expected: user-declared immovable constraints are respected; existing equipment location is not automatically locked; free orientation/position options precede treatment. A proposal shows actual reasons/before-after geometry; applying it is one undoable change, not a silent setup replacement.
+F-47 Modal reference cases. Expected: rectangular modal calculations agree with independent analytic cases/unit conversions; irregular and unsupported ceiling cases do not use bounding-box formulas.
+F-48 Reflection/SBIR references. Expected: first-order planar paths/points/distances/delays match independent geometric cases and the stated sound speed; bounded surfaces and apertures are respected. Valid irregular-room wall paths work independently of unsupported ceiling paths. SBIR states boundary assumptions; no measured amplitude/dip depth is claimed.
+F-49 Derived invalidation and recompute. Expected: edits/undo/redo invalidate dependent results in the state commit; recompute remains reachable. Late jobs carry room/dependencies/generation and are rejected after edits, switching rooms, cursor reuse or restart. Current means matching current inputs and supported model, not merely an existing cached result.
+F-50 Treatment evidence. Expected: coefficients, mounting context and product identities have validated provenance; unknown DIY/third-party panels receive no visual-only acoustic credit.
+F-51 Recommendations. Expected: acoustic reasons/actions/limits are understandable; buy-nothing fixture succeeds; no purchase appears solely because a catalog item exists.
+F-52 Budget/full reoptimization. Expected: changed budget, excluded/moved/removed items cause a fresh valid solution; prices are real configured data and science is unchanged.
+F-53 Scientific labels. Expected: input states and uncertainty remain honest; camera-derived dimensions and simulations are not marketed as field measurements; no invented RT60/accuracy/severity.
+
+G. SERVICES AND SECURITY
+F-54 Draft/catalog administration. Expected: only authorized owner operations change package data; incomplete offerings remain unpublished; ordinary approved price/text edits reach the app without an APK release.
+F-55 Price agreement. Expected: displayed amount/currency/package version agrees with authoritative checkout; price changes are handled before purchase.
+F-56 Verified purchase lifecycle. Expected: authorized configured sandbox success/cancel/failure/pending/duplicate/tampered/restored purchase and trusted revocation cases follow the approved policy. Idempotency prevents duplicate charges/requests/grants; a timeout neither unlocks a new service nor erases an existing verified entitlement. Original purchased terms remain separate from current fulfillment state.
+F-57 Purchased terms. Expected: later catalog changes do not rewrite an earlier price, inclusion list, version or reference; handoff is bound to the submitted room revision/model snapshot, approved shared data and verified purchase. Later room edits do not rewrite submitted work; media needs actual purpose/authorization.
+F-58 Unconfigured services. Expected: no invented live offers, fake paid unlocks, assumed on-site promises or quote-only substitution; special rooms remain editable.
+F-59 Upload/privacy boundary. Expected: no unauthorized media/private-room access, privileged secrets, supplier identities or development records in client assets/runtime requests. Test configured retention/deletion: history preserves needed metadata but cannot resurrect deliberately deleted raw media; scoped user auth is not confused with a shared privileged secret. Explicit backup/data-transfer rules exclude private room/history/media and credentials under the initial default; test applicable OS behavior rather than assuming one manifest flag guarantees every transfer path.
+F-60 Network/error handling. Expected: missing service credentials, timeout, cancellation, malformed response, stale job and denied ownership do not lose local work or expose another room.
+
+H. ANDROID, ACCESSIBILITY AND RELEASE
+F-61 Camera/lifecycle behavior. Expected: cold/resumed/rotated preview stays functional; optional AR has coherent camera ownership; actual frame stride/rotation/crop and interruption recovery are correct.
+F-62 Rendered phone editing. Expected: OnePlus Open folded/unfolded and supported orientations show usable canvas, bottom controls and keyboard without inaccessible clipped actions or finger-obscured essential values.
+F-63 Accessibility. Expected: TalkBack semantics and alternatives, large text, contrast, touch targets and non-color/non-audio completion cues work in the rendered app.
+F-64 End-to-end local path. Expected: manual room → correction → ceiling/3D → purpose/setup → placement → supported analysis/recommendations → restart/reopen/edit/history is actually exercised with honest model/data limits.
+F-65 End-to-end capture/import paths. Expected: real supported acquired evidence enters that same workflow; local manual fallback alone is not acceptance of automatic video or imported geometry.
+F-66 Safe installation and this app's data. Expected: an authorized installation uses the documented new identity without replacing an unrelated app. Saved rooms/history survive normal restart and this app's own tested updates.
+F-67 Full reconciliation. Expected: current decisions, all canonical scope, source, evidence and packaged artifact agree; every missing/partial/regressed/unverified active requirement is listed.
+F-68 Delivery evidence. Expected: usable actual APK, matching source revision/build instructions, current dashboard, test results and pending real-device/external work. No unsupported "finished" declaration.
+
+I. REQUIREMENTS CLOSURE AND ROOM LIFECYCLE
+F-69 Requirements before dependent code. Expected: one closure table traces active workflows/failures, approved authority, data/capability contracts, acceptance and classified gaps. Material dependent decisions are resolved or explicitly blocked; room inputs/configuration/empirical checks are not disguised as owner decisions. Assistant-written records cannot approve scope changes. No recurring whole-project approval gate.
+F-70 Room management and lifetime. Expected: create/open/rename/confirmed-delete works; deletion cancels jobs and removes only the intended room/history/exclusively owned media. Late results cannot resurrect it or affect other rooms; separately retained purchase terms remain intact. Local history survives restart/finalization and is not advertised as uninstall/device-loss recovery.
+
+PHYSICAL ACCURACY VALIDATION
+Use representative real rooms and independently recorded reference measurements. Include rectangular/irregular rooms, angles, openings, lighting/occlusion conditions and relevant camera configurations. Compare local geometry/dimensions rather than only a pretty total-room rendering. Record reference method, scale basis, device/OS/camera and errors. Establish supported accuracy claims only from adequate empirical evidence; this document invents no tolerance.
+
+BOUNDARIES BETWEEN EVIDENCE LEVELS
+- A core math test validates that method/fixture, not its suitability for an arbitrary real room.
+- A mock HTTP result validates client/contract behavior, not live inference/security/accuracy.
+- A JVM persistence fixture validates serialization, not actual Android disk recovery/migration.
+- A rendered emulator interaction can support runtime evidence, not physical camera accuracy or actual foldable gestures.
+- A physical-device execution proves the exercised behavior on that device/configuration, not every Android device.
+- Build/test evidence applies only to the source, artifact, inputs and environment it actually covered.
+
+DELIVERY GATES
+1. Experimental pilot: a usable advertised workflow, actual safe artifact, meaningful smoke evidence and disclosed gaps. A draft/stub does not pass a feature's real-operation case.
+2. Software-ready for final user/device checks: all approved implementation complete, records reconciled, appropriate available builds/tests/runtime checks passed, installable artifact available and no engineering/configuration blocker prevents meaningful testing. Only legitimate remaining user/device checks may remain. The project's 🪩 marker may be used only when every stated condition is met; it is not production certification.
+3. Full production acceptance: all required applicable implementation and verification cases meet their required evidence levels, including required device/live/physical-accuracy evidence. Required FAIL, UNVERIFIED and BLOCKED outcomes prevent a full release-readiness PASS.
+
+A clearly labeled pilot may precede full production acceptance when its advertised workflows are usable, data/signing protections hold and omissions are disclosed. A manual-only experimental build must state that real video reconstruction/live services are unavailable. Preserve all unresolved production requirements and required checks. Do not alter status definitions or remove checks to qualify.
+
+SHORT MANUAL PHONE TEST
+Only after an actual safe artifact and authorized installation:
+1. Open/create two different rooms and verify separation.
+2. Build an L room, move a selected wall/corner, add an alcove/angle and edit an exact fraction inline.
+3. Add window/door; exercise move/fine resize/rotate/width and invalid overlap boundaries.
+4. Undo, redo, finalize, leave, close/restart and reopen; verify the same history.
+5. Enter supported ceiling data, compare 2D/3D and preserve a special/mixed draft.
+6. Continue through relevant setup/free placement/supported analysis; edit an input and verify stale results recompute.
+7. Repeat critical interactions folded/unfolded, with keyboard/large text and relevant lifecycle interruptions.
+8. Test camera and configured services separately against their own procedures; do not infer them from the local-path pass.

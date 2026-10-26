@@ -1,0 +1,64 @@
+OWL ACOUSTICS — FIXED REQUIREMENTS, DEFAULTS AND MATERIAL DECISIONS
+
+This file defines the new build's requirements and decision boundaries. Product requirements take precedence over ordinary engineering defaults. New explicit user decisions supersede only actual conflicts and must be recorded in this project's decision log.
+
+FIXED PRODUCT REQUIREMENTS
+- Android first; geometry-first acoustics, with OnePlus Open folded/unfolded use prioritized.
+- Video-first capture; floor-plan image/PDF import and manual drawing are first-class paths.
+- AR/depth is optional supplemental evidence.
+- One canonical room model, local uncertainty, preserved observations/corrections and revision-aware results.
+- One individual room at a time; multiple independent saved rooms; irregular straight-wall shapes.
+- Canvas-first 2D editing with select-wall/choose-action behavior, lower contextual controls and live dimensions/area.
+- Inline exact measurement entry, metric/imperial support and drag snapping separate from exact values.
+- Hybrid window movement/fine sizing; door along-wall motion and generous orientation tap target.
+- Full meaningful per-room undo/redo across finalization, saving, leaving and restart.
+- Guided ceiling shapes/details, faithful supported 3D and editable special/mixed drafts.
+- Purpose-relevant setup, free placement before treatment and scientifically supported predictions.
+- Buying nothing is a valid successful result; no unsupported treatment-performance credit.
+- Configurable published-price professional services, payment in the app, private administration and immutable purchased terms.
+- Approved OWL brand/product assets, confidentiality, accessibility and reliable recovery.
+
+ROUTINE BUILD DEFAULTS
+D-01 — Initialize a new project and new records/source/tests. No pre-existing project inputs are required.
+D-02 — Initial units are feet/inches; metric is available. A 12 × 10 ft starting rectangle is visibly provisional planning geometry.
+D-03 — Wall edits are select-first with explicit actions; corner handles remain directly usable.
+D-04 — Show a simple Snap toggle and nearby alignment feedback. Tune screen-space tolerance; precise typed values bypass snapping.
+D-05 — Exact wall length/bearing anchors the selected start corner and moves the far corner with visible neighbor updates; explicit locked constraints are respected.
+D-06 — Left/right opening fields move the opening at fixed width. Numeric window width preserves center; door width preserves start jamb; endpoint resize preserves the opposite jamb.
+D-07 — Door orientation taps cycle labeled single-leaf hinge/in-out combinations without changing the wall aperture. Tap/drag arbitration prevents accidental rotation.
+D-08 — Window intent locks in wall-local tangent/normal axes. Fine perpendicular sizing bypasses coarse snapping; cancellation restores preview.
+D-09 — Separate main ceiling shape from compatible details. No nominal automatic ceiling height or arbitrary maximum.
+D-10 — 3D corrections link back to the corresponding shared 2D/ceiling/opening field. A separate free-form 3D gizmo system is not required.
+D-11 — Full meaningful history is conventional persistent linear undo/redo. A new edit after undo replaces its forward redo branch, without erasing protected observation provenance.
+D-12 — New development app ID is com.owlacoustics.roomplanner.dev. Public namespace/distribution and owner-controlled release signing need deliberate configuration before publication.
+D-13 — Use Kotlin/Compose/CameraX and testable domain logic with compatible stable pinned dependencies. Choose ordinary implementation libraries/tuning under the requirements.
+D-14 — For new playback setup, offer stereo as the default for Mixing and Hi-Fi, then honor the actual declared channel layout. Recording uses actual source/microphone-receiver roles.
+D-15 — Use unpublished configuration and isolated sandbox data while live services are unavailable. Local editor/geometry paths stay usable.
+D-16 — Geometry video is silent and app-private; no microphone permission or automatic public-gallery output.
+D-17 — Local history durability covers finalization/restart, not uninstall/device loss. Initially exclude private room/history/media and credentials from automatic Android backup/transfer; document/test platform behavior and explain this local-storage limit. No backup/export feature is implied.
+D-18 — Provide minimal create/open/rename/confirmed-delete room management. Deletion removes the room/history/owned media, cancels jobs and preserves other owners and separately retained purchase records.
+D-19 — Preview placement proposals and their reasons; explicit application is one meaningful undoable room edit.
+D-20 — Submit expert-service data only intentionally, tied to a room revision/model snapshot and verified purchase. Later local edits do not rewrite the submitted request.
+
+Section 08 closes the requirements/acceptance/data contracts before dependent code. Room-specific inputs are collected by the app; they are not missing owner requirements.
+
+These defaults are reversible engineering choices, not permission to change product goals, introduce paid dependencies, invent physical claims or erase data.
+
+MATERIAL DECISIONS / INPUTS
+B-01 Approved final logo and proprietary diffuser visual/profile: use supplied assets; ask for the exact missing item if unavailable. Do not generate a replacement.
+B-02 Validated treatment coefficients/mounting data: obtain product-specific evidence before quantitative benefit/quantity claims.
+B-03 Retail product prices and budget currency: real editable configuration, not invented values.
+B-04 Service package names, prices/currencies, inclusions, terms, delivery/turnaround and fulfillment operation: owner/business approval before live offerings.
+B-05 Billing provider and applicable distribution/service/region route: a real business/platform decision, verified against current official rules.
+B-06 Additional personal consultation: no automatic on-site visit, travel area, duration or subscription.
+B-07 AI endpoint/credentials, consent, retention and cost/rate authorization: configure before live processing.
+B-08 Quantitative purpose targets or unsupported methods: inspect legitimate technical evidence, identify the role/limits and ask only if a material user objective remains unresolved.
+B-09 Release namespace, signing ownership and public distribution: settle before publishing, without blocking a clearly identified development APK.
+B-10 Physical camera accuracy and device behavior: representative test evidence is required; no numeric guarantee is specified.
+
+Record each genuine blocker with exact missing input, affected operation, resolution owner, next procedure and independent work. Do not turn unset business values into an invented offer or a blanket reason to stop local development.
+
+SCOPE BOUNDARIES
+Microphone characterization, full advanced physics solvers, iOS and coupled inter-room transmission are outside this initial build. Detailed furniture recognition is excluded unless materially necessary for geometry/placement. Do not add cloud sync, CAD export, a marketplace, decorative furnishing/render subscriptions or other unrequested products.
+
+The specified acquisition, editor, ceiling, history, basic acoustics and service architecture remain active. A temporary unavailable state does not cancel them or satisfy full implementation.

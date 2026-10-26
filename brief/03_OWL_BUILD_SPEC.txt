@@ -1,0 +1,246 @@
+OWL ACOUSTICS — COMPLETE FRESH-BUILD PRODUCT SPECIFICATION
+25 October 2026
+
+Create a new Android application from these requirements. Every described capability is a requirement or an explicitly labeled engineering default, not a claim of implemented behavior. Complete the requirements-discovery checkpoint in section 08 before dependent code. Assistant-created records inherit this brief; they cannot authorize a scope change.
+
+1. PURPOSE, SCOPE AND PRODUCT PROMISE
+OWL is an Android-first consumer/prosumer room-acoustics application. Help a person create a defensible room model, correct it, choose the room's purpose, place relevant equipment, understand supported acoustic predictions and receive proportionate treatment recommendations.
+
+Correctness, reliability, simple interactions, accessibility, privacy and trust outrank spectacle or sales. WE ARE NOT RECOMMENDING PRODUCTS JUST FOR SALES. A successful result can be moving equipment or buying nothing.
+
+Initial work is geometry-first. Microphone characterization and a full advanced room-physics solver must not block it. Do not claim that ordinary camera video measures sound or establishes decay, soundproofing or calibrated acoustic response.
+
+One room is modeled at a time. Multiple independent room projects may be saved. Inter-room sound transmission through walls/doors is outside the approved room-builder scope. Do not build a coupled multi-room transmission simulator.
+
+The core includes the shared builder, permanent room history, guided ceilings/3D review, special-ceiling expert help and configurable service purchasing, together with the full acquisition-to-recommendation workflow.
+
+2. CONNECTED CUSTOMER JOURNEY
+Enter directly into useful room work; do not add standalone welcome, tutorial or pre-permission screens. Explain things at the point of use. Keep engineering diagnostics behind relevant optional technical details; normal use must not require interpreting raw tracking or solver output.
+
+Capture Room / Import Floor Plan / Build Manually
+→ Review and correct the shared dimensioned 2D plan
+→ Confirm the floor plan
+→ Define the ceiling and review faithful supported 3D geometry
+→ Choose room purpose
+→ Provide only relevant source/speaker/listener/recording setup
+→ Optimize free placement and orientation
+→ Run supported acoustic analysis
+→ Review justified actions and treatment, if needed
+→ Save, reopen, edit and revisit history.
+
+Confirming a 2D outline must not require an already-known ceiling height. Returning to an earlier step preserves work and invalidates affected later results.
+
+Keep these states distinct: editable draft; floor-plan reviewed; ceiling/model supported; setup ready; analysis current; recommendations current. Saving never requires complete geometry. Floor-plan confirmation requires a valid closed outline with supported or explicitly authored scale and reviewed unresolved plan issues; it confirms the drawing, not surveyed accuracy. Missing vertical dimensions do not prevent 2D confirmation, but may block a particular 3D aperture/calculation. A complete 3D label requires all geometry it claims to represent; an explicitly partial view does not pass that gate. Analysis checks its own inputs/model support, not the existence of a 3D render. Special/mixed rooms remain editable drafts, and independent room information can be retained without pretending the dependent path is complete.
+
+Show understandable missing-input, loading, cancellation, save-failure and recovery states. Keep a room editable if capture, analysis, expert service or network processing is unavailable. Missing prerequisites block the dependent result, not every supported action.
+
+3. ACQUISITION — THREE PATHS, ONE MODEL
+
+3.1 Video-first camera path
+Primary acquisition is video-first; ARCore/depth is optional supplemental evidence. The main flow must not require an AR-capable device. The initial recording default is visual video without audio, stored app-privately rather than automatically in the public gallery; geometry capture does not request microphone permission.
+
+Treat a room pass as a correlated sequence with overlapping views, feature/boundary continuity and camera motion. Derive observations for wall sequence, corners, openings, recesses, projections and angled wall sections; retain unresolved regions. A collection of independently interpreted screenshots is not equivalent to a verified correlated reconstruction.
+
+Guide capture toward unresolved boundaries/regions. Evidence-sufficient boundaries receive green plus a readable non-color cue. Green means sufficient evidence has been collected under the evidence policy; it does NOT certify physical dimensions. Repeated near-identical static frames must not count as independent viewpoints. Later conflicting evidence can reopen a boundary.
+
+Draw a camera-space overlay only if it corresponds to real image coordinates and supported observations. Decorative completion lines or a timer must not pretend a wall was found.
+
+Ask for the smallest useful additional observation: targeted clip, still, reference or measurement. Require an entire repeat scan only when overall topology cannot be recovered. Preserve supported portions and applicable manual corrections during recapture.
+
+For the initial server-assisted capture route, record at most 60 seconds per clip and allow targeted additional clips when needed. Use consent-based server-side OpenAI analysis of chronological video-derived visual evidence through an authorized secure service. Preserve frame order/correlation. A generated plan remains a candidate for review and does not establish metric accuracy by itself.
+
+A functioning cloud path requires secure authorized requests, real processing, conservative structured results and app import into the shared editor. An AI plan is a candidate for review. It cannot silently close a perimeter, select a standard height or invent a dimension.
+
+Use a free-first modular vision architecture: geometric tracking/candidates, a commercially compatible on-device semantic model and optional pose/depth evidence. Build the configured server-assisted route without making it a prerequisite for local editing. Keep on-device providers replaceable and implement/validate their required behavior rather than presenting an empty provider as a scanner. Select actual models using license, device-performance and representative-accuracy evidence; no paid model subscription or numeric accuracy is assumed. Calibrated intrinsics/monocular relative pose alone do not establish metric scale; require and record the supported metric anchor. Relative translation or predicted depth is not verified meters. The offline guarantee covers local room work and supported calculations; fully automatic offline metric reconstruction must not be advertised as proven. Real on-device observations and configured server processing have separate contracts and evidence requirements.
+
+3.2 Floor-plan / blueprint import
+Preserve first-class image/PDF floor-plan import. Imported material needs a defensible scale and a selected room boundary before dimensional analysis. Existing printed dimensions or a user-confirmed reference may supply scale; arbitrary pixel size does not. Let the user select the page/room and mark a known-length segment with its unit. Preserve the pixel-to-room transform. A contradictory second reference is a visible scale conflict, not an instruction to silently resize the room. Recalibration/source changes are undoable corrections with dependent invalidation.
+
+Route imported/editable geometry to the same canonical editor. Permit explicit room outlining/correction over the source when extraction is incomplete; identify that as assisted/manual import. Do not advertise automatic extraction if the implementation merely saves a document and opens an unrelated blank room. Do not interpret blueprint symbols or dimensions as independently field-verified observations.
+
+Preserve useful source provenance and user corrections. Handle unreadable, unsupported or inaccessible documents with a clear recovery path. Importing a plan containing several rooms must not silently expand the app into coupled multi-room modeling.
+
+3.3 Manual creation
+Manual creation is fully usable without camera, AR, online inference or a paid account. Start with an editable rectangle on a grid and an illustrated starting-shape drawer for rectangular, L, alcove and angled straight-wall outlines. These are working drawings, not measurements of a physical room.
+
+Do not require a form-first wizard, raw coordinates or CAD knowledge to begin. Provide accurate visual editing and precise numeric entry within the editor. Start with a clearly labeled 12 × 10 ft planning rectangle as a reversible drafting default, with feet/inches as the initial display units and metric available. The outline is visibly editable; its values are not captured or user-confirmed physical dimensions. Deliberately authoring a closed rectangle/alcove is permitted: record it as planning/user geometry. The ban on invented closure applies to pretending missing observed capture evidence exists. New placeholder opening sizes and template dimensions stay provisional until reviewed/replaced; never inherit a measured/verified flag merely from creating the object.
+
+4. CANONICAL ROOM, EVIDENCE AND MEASUREMENT
+Use one coordinate system and room model across acquisition, 2D, 3D, openings, setup, placement, analysis, recommendations and persistence.
+
+Keep stable identities for room, boundaries, corners, openings and evidence. Maintain ordered connected geometry, correct parent-wall attachment and the relationship between stored observations and edited coordinates.
+
+For material data retain, as applicable:
+- Value and units; observed/estimated/inferred/assumed/user-entered/corrected state.
+- Source/frame/document/reference and affected region.
+- Physical-size basis, supporting constraints and evidence sufficiency.
+- Original observation plus corrections/deltas; do not replace the original with the latest entry.
+- Conflicts and uncertainty; meaningful provider/model/version provenance.
+- Revision/dependencies needed to detect stale results.
+
+Confidence/sufficiency must influence behavior. Strong supported data can proceed; reviewable uncertainty is visible; low or conflicting evidence blocks only dependent calculations where possible. Do not invent statistically calibrated percentages or uncertainty intervals.
+
+Recognized doors, electrical plates, repeated objects, known OWL products, intrinsics and optional depth can constrain scale. Establish subtype and actual physical-size basis before assuming a standard dimension. Prefer independent cross-checks. Surface material disagreement instead of averaging incompatible constraints or contaminating the entire room from one bad reference.
+
+Never invent unsupported walls, closure, rectangularity, angles, symmetry, openings, door swing, dimensions, ceiling heights or switch heights. Unknown is a valid saved state. Use closure disagreement to locate likely error, not to distort supported measurements.
+
+Use meters as the new canonical computation unit. Preserve entered units/text and perform explicit tested conversions at input/output and external data boundaries. Coordinates determine derived lengths/areas; do not store an independently editable contradictory wall length. Preserve each entered decimal/fraction as an exact decimal or rational value with original unit/text, alongside finite computation coordinates. Unit conversion and display must not accumulate repeated rounding. A measurement estimate stays an estimate even when represented exactly. Use documented numerical tolerances for arithmetic robustness, separate from physical accuracy or user-facing clearance rules. Support understandable metric and feet/inches/fractional-inch entry and display. Preserve the exact entered value to the data model's documented numeric accuracy. Parsing, display rounding and drag snapping are separate concerns. Do not quantize an explicit input to the drag grid, or advertise display fractions as physical measurement accuracy. Fractional-inch display resolution is an engineering formatting choice and must never imply physical camera accuracy.
+
+Validate non-finite/invalid numbers, impossible dimensions, zero-length segments, missing connectivity, self-intersections, perimeter inconsistencies, opening ranges/overlap and conflicting measurements. Keep invalid edits recoverable and explain their effect plainly. Unknown is a distinct value/state, not 0, an empty string converted to 0, NaN or an assumed standard. Zero may be valid for a supplied bottom elevation/offset; positive wall/opening sizes must be positive. An original observation is protected provenance, not automatically a locked editing constraint. Explicitly locked values must not move; deliberate user corrections retain the original and record the changed geometry/conflict.
+
+5. CANVAS-FIRST 2D BUILDER
+Use a consumer-friendly canvas-first direct-manipulation experience with OWL's own brand and approved assets. The basic room editor exposes walls, doors and windows. Equipment/source/listener placement and treatment overlays belong to their relevant later workflow stages rather than decorative furnishing tools. Do not import third-party paywalls, render subscriptions, furniture, textures, internal-ID dialogs or CAD features.
+
+5.1 Selection and geometry
+- Keep the room canvas primary, with visible selection/highlight and lower contextual controls/bottom-sheet properties.
+- Tap a wall to select it, then choose the intended action before a wall drag changes geometry. Do not guess move versus split from an ambiguous touch.
+- Support corner adjustment; moving a selected wall; inserting/moving/removing an intermediate vertex; splitting a wall; adding an alcove; and straight angled walls.
+- Show the effect on connected walls during exact length/angle correction. Geometry, numeric labels and polygon area must agree.
+- Preserve opening attachments through valid edits. If an edit would orphan/overlap an opening or break supported evidence, reject it with a useful explanation or require an explicit valid relocation. Never silently delete it.
+- Recalculate wall dimensions and mathematically correct polygon area continuously while editing, in current units. No confirmation modal after every gesture.
+- Provide pan, pinch zoom, zoom/fit affordances and usable view rotation. View transforms change the view, not physical geometry.
+- Make exact lengths/angles available without leaving the canvas. Keep selected values legible and away from finger occlusion.
+
+5.2 Measurements and snapping
+Tap a displayed editable measurement to edit it inline. A keyboard is acceptable; a separate modal measurement popup is rejected. Keep the relevant drawing and live neighboring dimensions visible when practical.
+
+Provide discoverable snap/alignment behavior and a way to disable it for fine work. A snap indication means the working edit is aligned, not that physical geometry was measured. Exact typed values bypass drag quantization. Keep drag-alignment tolerances separate from physical measurement constraints and exact numeric entry.
+
+Routine default: select-first wall actions, direct visible corner handles, a simple explicit Snap toggle with visually indicated nearby alignment, and exact entry as the precision path. Tune tolerances in screen space for actual device usability; test them. Do not require long press. Gesture tuning must not quantize an exact typed value, promote a draft to measured geometry, or change when a user lifts a finger. Accessible numeric and directional controls must remain available without performing a multi-touch/fine gesture.
+
+5.3 Doors and windows — shared rules
+Add an opening after selecting its parent wall. Show and continuously update left offset, opening width and right offset along that wall; "left/right" follow a consistent local wall direction. Enforce left + width + right = current wall length. Stable parent-wall start/end IDs define this local direction regardless of viewport rotation. Editing left moves the opening with width fixed; editing right moves it with width fixed using offset = wall length - right - width. Numeric window width preserves its center; numeric door width preserves the start jamb. Endpoint resizing preserves the opposite jamb. Reject an invalid exact entry with its prior value intact; do not silently clip the typed number or move another object. During a drag, constrain previews at the last valid/nearest valid boundary with visible feedback and commit only valid geometry. No minimum clearance is implied beyond valid nonoverlapping geometry.
+
+Openings move along their wall, resize within it and retain stable attachments/history. Enforce real geometry boundaries and overlap rejection. Do not impose arbitrary edge margins or minimum gaps/widths without a justified physical or mathematical requirement.
+
+Preserve relevant vertical data: door/window opening height and bottom elevation/sill. Keep unknowns unknown and put these later detail fields in the contextual properties rather than crowding basic placement. A door touching the floor is not an automatic measured zero unless supported or explicitly entered.
+
+5.4 Hybrid window behavior
+- Drag the center parallel to the wall to move the entire window.
+- Drag the center perpendicular to the wall for fine, symmetric width expansion/contraction.
+- Drag an endpoint parallel to the wall to resize that end.
+- Perpendicular endpoint motion supplies ultra-fine endpoint sizing.
+- Show live left/width/right measurements; tapping a number edits it directly inline.
+- Lock gesture intent sufficiently to prevent accidental switching between moving, resizing and panning. Numeric entry remains an accessible alternative.
+- Preserve boundaries, readable labels and meaningful single-gesture undo.
+
+Keep these gesture semantics while choosing and testing sensitivity constants as ordinary engineering tuning. Resolve movement in the selected wall's tangent/normal coordinates, including angled/rotated walls. After normal touch-slop, lock one interaction intent for that pointer sequence; do not switch a move to a resize mid-gesture. Perpendicular center motion moves both ends equally around the center, with a consistent indicated expand/contract direction; perpendicular endpoint motion adjusts only that endpoint. Fine modes use a lower gain than ordinary sizing and bypass coarse snapping. Preserve continuous motion across zoom changes outside an active gesture; tune and document gain against the intended behavior. Pointer cancellation rolls back preview; a pinch/view-rotation begins only outside an active object edit or after canceling its uncommitted preview.
+
+5.5 Door movement, orientation and width
+Provide along-wall dragging with live side measurements. Put a rotate glyph in the door's center circle. The whole highlighted door region is a generous rotation tap target, not only the tiny icon. Distinguish a tap from a drag so moving the door does not also rotate it.
+
+A user-selected orientation/swing depiction is a drawing choice recorded as user input; do not infer a real swing from absent evidence. Keep the wall aperture attached and unchanged by symbol orientation alone. For a single-leaf symbol the rotation tap cycles four labeled hinge-side/in-out combinations; starting physical handing may be unknown until the user selects one. This is a reversible diagram control, not detected physical evidence. Do not add automatic double/sliding/garage door inference or rotate the parent wall.
+
+Provide an inline exact door-width field and clear endpoint width handles as the routine interaction default. Endpoint resizing keeps the opposite jamb fixed; numeric width changes keep the start jamb fixed when valid and show the result. Reject out-of-wall or overlapping changes rather than silently moving other openings. Treat these anchoring rules as explicit reversible engineering defaults.
+
+6. DURABLE EDITING, AUTOSAVE AND ROOM ISOLATION
+Provide visible Undo/Redo and reliable room autosave. A minimal room selector supports create/open/rename and deliberate confirmed deletion. Explain that deleting a room removes its geometry/history and exclusively owned source media. Cancel its jobs, reject late callbacks and preserve other rooms or shared-source owners. Separately retained purchased terms/verified orders are not erased or revoked merely by deleting local room geometry. Persist meaningful per-room edits, the history cursor and redo state. Saving, finalizing, leaving, app restart and reopening must preserve the ability to undo how the room was built and redo it.
+
+Group a continuous gesture into one meaningful edit. Preview samples must not create hundreds of corrections. Preserve original observations separately. Persistent history here means the current conventional linear undo/redo history and cursor; it does not silently require a new branching version-control interface. A new edit after undo replaces only that room's forward redo branch; it must not delete original observations/corrections retained as evidence, other rooms or unrelated acquisition records. No-op/canceled gestures create no durable history step.
+
+Finalization is a reversible room workflow state, not a command to erase history or flatten editable data. Reopen a finalized room directly into editable 2D/history access.
+
+Retain full meaningful history by default. No numerical cap is approved. Optimize storage/writes and measure real resource/latency behavior before a justified cap is considered. Protect original evidence independently of any future limit; disclose the actual effect before a consequential loss of history.
+
+Commit each meaningful edit with its history/cursor and dependent-result invalidation as one consistent state change before exposing any result as current. Serialize durable writes per room so an older save cannot overwrite a newer one. A Saved/Finalized claim requires successful persistence, not a lifecycle callback or in-memory state. If a write fails, retain the last durable data; clearly keep the edited preview as unsaved for retry or deliberate discard, and block transitions that claim it was saved. Do not discard invalidation or display old analysis during that state. Save failures must be visible and must not advance a workflow while claiming success. Keep interrupted edits/drafts recoverable where practical. Start with a documented version-1 persistence schema. Preserve stable IDs and reject unknown future/corrupt data without overwriting it. Add tested compatible migrations when this new app changes its stored format; no external saved-room dataset is an initial build prerequisite.
+
+Keep room histories, capture callbacks, documents and processing results isolated by project ID. A delayed result from Room A must never write into Room B because navigation changed. Associate work with room ID, input versions and a monotonic operation generation. Edit/undo/redo/reload cannot rewind that generation and accidentally accept an older job. Discard obsolete results even when the history cursor returns to the same number. On restart revalidate pending jobs/media and recover from the last durable state, not an assumed in-memory undo stack. Permanent history means durability within a saved room across finalization/restart, not a promise of surviving uninstall, clear-storage or device loss. The initial local-storage default and explicit Android backup/transfer policy are defined in sections 05 and 08; do not imply an undeveloped backup/export service exists.
+
+7. GUIDED CEILING AND SHARED 3D REVIEW
+After floor-plan confirmation, offer illustrated choices and only the dimensions needed for the selected shape. Main shape coverage:
+Flat; Single slope; Peaked / vaulted / cathedral; Vaulted with flat center; Arched; Tray / raised center; Other / Special / Mixed.
+Compatible details:
+Dropped/suspended construction; exposed beams; coffered recesses.
+
+Use this primary-shape/detail grouping with clear illustrations. Do not equate curved arches with pitched cathedral geometry or require exactly nine tiles. Reflow for screen size/accessibility.
+
+Collect the profile's supported dimensions and orientation, including heights, ridge/plateau position, span, inset or repeated details where relevant. Do not assume symmetry, curve type, vertical steps or standard heights. Show a curve formula only when the selected physical profile actually matches it. Unknown/mixed construction remains an editable draft. Section 08 defines the minimum profile inputs for each shape/detail. Use an identified actual curve or supplied sampled profile for arches; label geometric approximation and do not silently default to a semicircle. Ordinary shape support is not completed by storing every shape as unsupported.
+
+No fixed 8-foot ceiling, maximum height or nominal automatic replacement is approved. Reuse trustworthy capture evidence; manual estimates stay estimates even after a user chooses them. Distinguish "my floor-plan outline is correct" from "my ceiling dimensions are confirmed."
+
+Generate 3D from the same canonical polygon/profile/openings. Irregular outlines must not turn into bounding rectangles. Openings need supported vertical dimensions for a faithful aperture. If some surfaces are unknown, show a clearly labeled partial/sketch representation or the specific missing input; do not render a complete fake solid room.
+
+Corrections reached from either view update the shared model and affected results. From 3D, return directly to the corresponding 2D/ceiling/opening field while preserving selection/context, apply the correction and regenerate the view. A separate free-form 3D manipulation system is not required. A visually convincing preview does not prove physical accuracy or solver support. Unsupported acoustics must be identified independently from supported geometry.
+
+Other / Special / Mixed must always save with history and remain editable. Explain the actual geometry/modeling limitation and configured expert-help options without fabricating an offering or requiring payment simply to keep editing.
+
+8. PURPOSE AND RELEVANT SETUP
+Supported purpose profiles:
+Mixing / Music Production; Podcast; Audiobook / Narration; Voice Acting; ASMR; Home Theater; Hi-Fi / General Listening; Streaming / Video; Instrument Recording; Other.
+
+Purpose determines understandable terminology, relevant setup and optimization goals. Do not infer it from equipment seen in a video, and do not add a separate symptom-first "echo" path as the primary journey.
+
+Ask only relevant source/speaker/listener/recording positions, orientations and heights. Permit empty-room proposals. Existing placement is an observation, not a locked optimum. Explicit user immovable constraints must be respected. Validate necessary setup cardinality and positions for the selected purpose without inventing equipment.
+
+Use clearly documented, scientifically supported and configurable purpose goals. Do not manufacture per-purpose RT60 targets, "ideal" scores or measured frequency responses to fill missing configuration. Any new quantitative target needs a supported scientific basis and an explicitly documented role. Treat loudspeakers, voices and instruments as sources; listening positions and microphones are receivers for the applicable calculation. Ask for actual roles/channel arrangement rather than assuming every purpose is a two-speaker room. For playback purposes ask for the actual channel/source arrangement and listener; default Mixing/Music Production and Hi-Fi to a stereo pair. For narration/voice/ASMR/instrument recording use actual performer/instrument sources and microphone receivers; for podcast use the user-declared talker/microphone arrangement; Home Theater uses its declared channel layout; Streaming/Video uses the declared recording/playback setup. Validate the selected arrangement rather than forcing every purpose into stereo. Define each optimization's inputs, constraints, objective and supported outputs before generating coordinates; random/default placement is not optimization. If a needed material target is genuinely unspecified, name that dependency and continue supported geometric guidance; do not mark that target-dependent feature complete. Other collects a plain-language use and relevant source/receiver roles. Actual room-specific equipment/measurement inputs belong in the app workflow, not a project-owner requirements survey.
+
+9. PLACEMENT, SUPPORTED ACOUSTICS AND RESULT VALIDITY
+Where relevant, optimize in this order:
+Room orientation → source/speaker position → listener/recording position → heights → first reflections → modal/SBIR considerations → remaining treatment.
+
+Keep room modes, speaker-boundary interference (SBIR), reflections, absorption, scattering, diffusion and normalized diffusion separate. Implement deterministic first-order geometric reflection paths against known bounded planar surfaces, including valid supported walls/floor/ceiling pieces. Check source/receiver geometry and aperture/occlusion eligibility; do not reflect from a doorway as if an unbroken wall existed. Show applicable path points/distances and modeled delays with a documented sound-speed assumption. Irregular rooms still use their actual polygon and valid surfaces; one unsupported ceiling path does not disable every independent wall path. SBIR outputs disclose the supported boundary/path assumptions and do not claim measured dip depth or severity.
+
+Rectangular-room modal prediction:
+f = c/2 × sqrt((nx/Lx)^2 + (ny/Ly)^2 + (nz/Lz)^2)
+Use supported dimensions, consistent units and documented speed-of-sound assumptions. This formula is not an irregular-room solver. Rotating a valid rectangle does not make it nonrectangular; an L-room's bounding box does not make it rectangular.
+
+Geometry predicts geometric/modal relationships. It does not by itself establish exact response amplitude, Q, decay, SPL, audibility or issue severity. Do not display those as measurements. Model support and input sufficiency must gate each result, not just whether a Render or Analyze button exists.
+
+Do not approximate a non-flat ceiling as flat or ignore openings/irregular boundaries without a supported explicit model and honest limits. Advanced solver integration remains deferred from the initial geometry-first build. Preserve active geometry/acoustic integration gaps in records; do not disguise a partial result as full-room acoustic optimization. Maintain an operation-level capability table: editable geometry; supported 3D surfaces/apertures; modal method; reflection/SBIR method; treatment estimate; current required input/limitation. A rectangular modal solver can be valid only for its documented rectangular model. Supported geometric reflections may still run independently on other valid surfaces. A deferred advanced solver is not a requirement to implement one now, and an unavailable method is not approval to cancel required basic geometry/reflection integration. Missing product coefficients block the dependent quantitative treatment estimate, not independent geometry/mode outputs. Label a draft as draft and a required missing capability as PARTIAL/BLOCKED; a draft fallback does not certify every normal ceiling type implemented.
+
+Any change to geometry, ceiling, openings, setup, constraints or relevant evidence invalidates affected cached 3D, modes, SBIR, reflections, placement and treatment results. Show that recomputation is needed. Placement proposals show reasons and relevant before/after geometry before application. Apply a user-accepted proposal as one meaningful undoable edit; do not silently replace the declared setup. Re-optimization and analysis must still be reachable after invalidation; do not create a stale-result gate that makes recomputation impossible.
+
+10. RECOMMENDATIONS AND PRODUCT DATA
+Separate observation → prediction → free optimization → justified recommendation. Explain the acoustic reason, action/location, expected benefit and material uncertainty in plain language.
+
+If alternatives are effectively equivalent, prefer less treatment, expense and disruption. Full Package and Budget modes change constraints; the scientific rules remain the same. Removing/moving/excluding/limiting an item must trigger re-optimization, not subtraction from a stale plan. Do not invent current prices to claim a dollar budget is met.
+
+Required initial treatment catalog geometry/visual direction:
+- 2-inch wedge absorber, 2 × 4 ft.
+- Foam corner/bass trap, 2 × 1 × 1 ft class; use the approved LENRD-style visual reference where actually supplied, without implying another brand's performance data applies.
+- 3-inch flat absorber, 2 × 4 ft, with any air gap explicitly represented.
+- Hanging wavy "~" foam ceiling cloud, 2 × 4 ft.
+- User's proprietary reflective A/B diffuser.
+
+Use charcoal treatment/cloud visuals and the supplied proprietary A/B diffuser design in charcoal. Use the final approved product assets/dimensions; obtain a missing required asset explicitly rather than fabricating a replacement. Product dimensions must be represented as actual catalog data with their source/confirmation state. A shape or color is not a performance coefficient.
+
+OWL ester polyurethane is nominally 1.8–2.2 lb/ft³. Thickness/density do not establish absorption. Do not substitute generic ether foam, mineral wool or an unrelated branded test curve. Use validated product-specific technical data with applicable mounting/frequency context before relying on performance in quantitative recommendation.
+
+Unknown existing DIY/third-party treatment may be recorded as present/unknown. Never assign acoustic credit from appearance alone. A reflective diffuser is not an absorber; foam is not sound isolation.
+
+Supplier/factory names, confidential sourcing details and supplier-specific identities must not ship in client source/assets, public docs, metadata, logs, analytics, APIs or production data. Use OWL-facing IDs and validated technical properties.
+
+A design-stage simulation or visual concept is not validated product performance and must not become a quantitative coefficient dataset without appropriate evidence.
+
+11. EXPERT SERVICES, CATALOG AND IN-APP PURCHASES
+Preserve editable special-ceiling drafts while offering configured expert help. Explain what the offered tier includes, what the customer receives and why the specific situation needs assistance.
+
+Offer configured upgrade and one-time consultation packages with published prices and payment directly in the app. An additional personal-consultation category remains unavailable until its actual offering is defined and approved. Do not assume on-site travel, duration, delivery channel, turnaround or a subscription. A quote-only workflow is not a replacement for the approved direction.
+
+Live package names, prices, currencies, inclusions, terms, billing provider and fulfillment operation must be supplied/approved before publication. Build configurable behavior without publishing invented offers.
+
+Owner-authorized private administration edits package descriptions, inclusions, availability/order and provider-linked prices. Implement a minimal suitable authenticated admin or use the configured provider console/API; do not build an unrelated business platform. Ordinary price/text edits must not require a new APK. Text configuration cannot promise an unimplemented capability.
+
+The displayed amount/currency and actual provider-authoritative checkout must agree. Handle catalog/price changes before confirmation. Never unlock a service from a client-supplied amount, receipt string or success flag. Use trusted provider verification, appropriate authorization and duplicate-safe purchase handling.
+
+Preserve completed purchase terms: package/version, promised inclusions, applicable price/currency and purchase reference. Later catalog edits must not rewrite earlier promises. Link the intentional service request/handoff to the correct room revision/model snapshot and verified purchase. Show the notes and data to be submitted; raw media needs its own actual purpose/authorization. Later local edits do not silently rewrite a submitted request. Any update/fulfillment promise must come from the approved package workflow. Payment does not magically resolve geometry. Use distinct request/order states: configuration unavailable; ready offer; checkout pending; verified paid; fulfillment requested; fulfilled; canceled/failed as applicable. Repeated taps/retries/provider callbacks use stable idempotency references and must not duplicate charges, consultation requests or grants. Network loss cannot be treated as either verified purchase success or deletion of a previously verified entitlement. Reconcile pending/restored purchases from trusted provider state; handle revocation/refund only through that state and approved service policy. Preserve original purchased terms separately from changing entitlement/fulfillment status.
+
+Determine billing integration only from approved business choices and current official distribution/service/region rules. Do not assume a billing provider or that every digital/service category has the same distribution requirements. Unconfigured/incomplete offers stay unpublished; sandbox data stays separate and clearly non-live.
+
+12. ANDROID QUALITY, PRIVACY AND BRAND
+Android is first; prioritize the user's OnePlus Open, including folded/unfolded layouts. Verify the actual test device OS/capabilities; Android version and AR/depth support are environment facts, not assumptions.
+
+Support readable portrait/landscape, keyboard-safe forms, practical one-handed controls, large enough targets, scalable text, contrast, screen-reader semantics and written feedback. Do not rely only on color, sound or speech. Camera instructions must be usable by a hard-of-hearing person.
+
+Handle cold start, runtime permissions/denial, camera interruption, pause/resume, rotation/recreation, process restart, storage failure and relevant network failure without unnecessary lost work. Keep expensive tasks off interactive rendering where practical and avoid needless battery/storage/API costs.
+
+Prefer on-device processing where practical. Do not make local editing dependent on a server or login. Do not upload raw room imagery without the product need, authorized service and appropriate disclosure/consent. Retain raw video only for an explicit communicated purpose; secure it and provide applicable user deletion. Original measurement/provenance metadata and raw media have different retention needs. Explain locally retained capture use and deletion; remove server temporary copies after the processing purpose ends under the configured retention policy. Deleting source media must mark it unavailable wherever referenced; history/undo must not recreate the deleted bytes. Keep necessary immutable measurement/purchase records distinct from that media. Request only permissions needed by a real approved operation; room-video capture must not quietly become microphone characterization. Development instructions and internal records are not automatic APK assets or runtime upload payloads. Explicitly configure Android backup/data-transfer rules; initially exclude private room/history/media and credentials from automatic backup/transfer rather than enabling an undisclosed route. Verify current OS/manufacturer behavior and communicate the local-storage recovery limits. This is a labeled privacy-preserving build default, not a claim that app data survives uninstall/device loss.
+
+Use the approved OWL Acoustics logo. Use the supplied final logo exactly; do not invent a substitute or add ® without confirmed registration. Use a coherent accessible visual system and keep ordinary color/type choices revisable. Never label a provisional branding placeholder as final.
+
+13. INITIAL-RELEASE BOUNDARIES
+Do not expand this brief with microphone characterization; a full advanced solver; detailed furniture recognition/mapping unless materially necessary; iOS; inter-room transmission simulation; unrelated DIY/material marketplaces; cloud sync/cross-device history; CAD export; or decorative furnishing/render paywalls.
+
+These boundaries define this build. An unavailable component does not cancel an active requirement, and new product scope requires explicit approval.
+
+Video reconstruction, import, faithful editing, ceilings, durable history, supported acoustics and service architecture all remain active. A limited experimental test APK does not satisfy the entire specification.

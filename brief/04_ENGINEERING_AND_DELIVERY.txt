@@ -1,0 +1,103 @@
+OWL ACOUSTICS — NEW-PROJECT ENGINEERING AND DELIVERY
+
+0. CLOSE REQUIREMENTS BEFORE DEPENDENT CODE
+Complete section 08 once. Trace all approved paths and failure states, establish actual data/capability contracts, map acceptance and classify unknowns. Record one closure table in docs/DECISIONS.md. Resolve delegated engineering choices; ask only about a truly unresolved material owner decision before its dependent work. Room-specific inputs, configuration values and empirical verification have their own gates and must not become a blanket implementation delay. New records inherit the supplied requirements.
+
+1. INITIALIZE THE PROJECT
+Create a dedicated empty Android project and initialize its own source control. Do not overwrite an unrelated directory. Author the source, tests, build configuration and documentation here.
+
+Use Kotlin, Jetpack Compose, AndroidX and CameraX as the baseline. Use testable domain code for geometry, history, provenance, calculations and optimization. Select compatible current stable JDK/Gradle/Android plugin/SDK/library versions from official documentation, pin them and document the environment. Verify commercial/distribution licenses for code, models and transitive dependencies.
+
+Local room editing and available local calculations must work without login, network, an AI account or ARCore. Optional AR/depth must not own the camera in competition with an independent capture session. Design and validate one coherent camera architecture.
+
+Development default: application ID com.owlacoustics.roomplanner.dev and a clearly marked development launcher identity. This is a reversible development identifier, not approval for public distribution. Use new development signing configuration and protect its keys; configure owner-controlled release signing/distribution deliberately. An isolated test emulator may install/run the app for verification. Installation on the user's personal device and public publishing require their corresponding authorization.
+
+Create:
+docs/OWL_MASTER_SPEC.md — complete requirements, workflow and acceptance.
+docs/DECISIONS.md — explicit decisions, engineering defaults and exact supersessions.
+PROGRESS.md — actual behavior, revision, evidence, incidents, blockers and next steps.
+docs/ACCEPTANCE.md — stable test-case inventory linked to requirements/evidence.
+Initialize from this brief; initial features are PLANNED until actually authored/tested.
+
+2. ESTABLISH THE APK BUILD EARLY
+Create a repeatable source-to-APK path before broad feature expansion. Keep the wrapper, SDK/JDK requirements, dependency versions, environment instructions and signing expectations explicit. No secret or machine-specific absolute path belongs in committed configuration.
+
+For a conventional app module, expose and verify commands such as:
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+Run domain-module tests too if separated.
+Use :app:connectedDebugAndroidTest only with an actual configured emulator/device and actual instrumented cases.
+
+These are intended new-project tasks to implement/verify, not assertions of executed results. Read failures and repair the cause. Distinguish source errors, bad fixtures, incompatible host tools, missing SDK/network and unavailable devices. Do not suppress checks or repeat equivalent failed downloads indefinitely.
+
+3. COMPONENT RESPONSIBILITIES
+Keep clear interfaces for:
+- video/import/manual acquisition;
+- observations, metric evidence, conflicts and provenance;
+- canonical geometry, openings, ceilings and validated edits;
+- 2D canvas and shared 3D representation;
+- purpose/setup, placement and supported acoustic methods;
+- recommendation policy and versioned product data;
+- transactional persistence, meaningful history and recovery;
+- configured AI, service catalog, trusted purchases and fulfillment.
+
+One canonical model supplies every view/calculation. UI gesture preview state is temporary. Durable changes pass through the same validated domain commands as numeric edits. Keep source/media identity and observation data separate from derived geometry/results. Use app-private media ownership/reference tracking and a repository boundary for local persistence. Cloud sync is outside this build.
+
+Use a documented meters-based coordinate system and stable IDs. Preserve exact entered decimals/fractions and units separately from finite computation coordinates. Derived lengths/areas cannot be independently edited into contradiction with vertices.
+
+4. TRANSACTIONS, HISTORY AND ASYNC WORK
+A gesture begins from committed state, previews valid geometry, displays live measurements, then commits one meaningful model/history change and invalidation consistently. Cancellation/no-op creates no history step. Exact input uses the same geometry validation.
+
+Persist model, cursor, redo branch and invalidation state through a transactional local database or recoverable atomic replacement. Start at a documented schema version 1; add compatible migrations when this app's own format changes. UI saved-state APIs are not the room/history database.
+
+Serialize writes per room. Saved/finalized requires durable success. On error keep the last durable data and make unsaved work explicitly recoverable by retry/discard. Do not advance a transition while claiming an unsuccessful save succeeded.
+
+Use room ID, input dependency revisions/hashes and monotonic operation generation on jobs/results. Undo/redo/reload cannot reuse an old generation. Discard an obsolete result even if a history cursor repeats. Recompute must evaluate current input readiness, not be blocked merely because a prior result is stale.
+
+Coalesce pointer samples into meaningful commands/provenance changes. Optimize storage and off-main-thread writes before considering retention limits. Measure actual extended histories; no arbitrary cap.
+
+5. CAMERA / RECONSTRUCTION
+Verify one real path early:
+camera/frame orientation/stride/crop → observations → correlated tracking → partial topology → metric constraints → conservative plan → shared editor → correction/save/reopen.
+
+Use actual commercially compatible segmentation/tracking components for on-device processing. Semantic labels, relative motion and predicted monocular depth do not independently prove dimensions. The provider must supply real source-linked observations; a stub is not a functioning scanner.
+
+For server-assisted OpenAI processing, implement an authenticated HTTPS service and app client. Use current official API capabilities; do not assume raw video is supported. Bounded chronological frame processing may be used while preserving correlated evidence and conservative validation.
+
+The service contract includes authenticated room ownership; request-specific consent; bounded duration/size/cost/rate; cancellation/retry; room/input generation; structured partial geometry/unknowns; invalid response handling; temporary-file deletion and stated retention. API keys and shared privileged tokens remain on the backend. Do not expose a development server as a secure deployed service. Record video without audio; do not enable audio or request microphone permission for this geometry path. Implement explicit backup/transfer exclusions for private data, media and credentials, and test the applicable platform behavior.
+
+Configuration missing at development time does not justify an unusable local editor or fake analysis success. Implement independent client/contract/domain tests and clearly mark the unconfigured live dependency. A configured provider must still be tested with representative real input.
+
+6. GEOMETRY AND SCIENCE
+Validate topology, opening attachment/overlap, units and constraints at input, edit commit, load and calculation boundaries. Test independent analytic polygons and dimensional examples, not a duplicate of the same implementation.
+
+Generate 3D from actual canonical polygon/profile/openings. Maintain an operation-level capability matrix: geometry editing; complete/partial 3D; modal method; reflection/SBIR method; treatment estimate; needed inputs and limits.
+
+Supported basic calculations must work. A deferred advanced solver must not be quietly added as a mandatory dependency, nor used as an excuse to cancel required basic integration. A required unimplemented method remains PARTIAL/BLOCKED; storing a draft is not its completion.
+
+For each purpose-dependent optimization declare inputs, actual source/receiver roles, constraints, objective, supported method and output rationale. Validate against independent geometric/acoustic cases. Never present arbitrary coordinates or product presence as proof of optimization.
+
+7. CATALOG, PURCHASES AND SERVICES
+Keep product geometry, validated performance, retail prices and professional-service terms as separate versioned data.
+
+Build minimal private owner-authorized administration/provider catalog linking. Names, descriptions, inclusions, availability/order and provider-authoritative prices can change without a new APK. Configuration cannot promise an unimplemented capability.
+
+Model configuration unavailable; ready offer; checkout pending; verified paid; service requested; fulfilled; canceled/failed as applicable. Use stable idempotency references for retries and provider callbacks. Verify purchases on trusted infrastructure. Keep immutable purchased terms separate from changing entitlement/fulfillment state. Bind submitted service work to an explicit model revision/snapshot and approved shared data; later editor revisions do not silently change it.
+
+No live provider, package amounts or fulfillment promises are fixed by this guide. Do not invent them. Use isolated sandbox data to test the implemented purchase boundary; complete the chosen real provider integration after the business/distribution decision and credentials exist.
+
+8. BUILD ORDER
+A. Requirements closure, then new project/records and reproducible APK.
+B. Full manual/shared editor, openings, exact entry, history and safe persistence.
+C. Ceiling/3D, purpose/setup, free placement and supported local calculations.
+D. Real video/import integration and recovery; evaluate risky provider feasibility early alongside independent local work.
+E. Justified treatment/catalog constraints and configured expert-service/purchase integration.
+F. Rendered/lifecycle/accessibility/performance/device verification and artifact reconciliation.
+
+These are engineering milestones, not permission to stop after one path or remove remaining scope. Deliver a useful labeled test APK at a coherent milestone if helpful, while continuing authorized work.
+
+9. VERIFICATION AND DELIVERY
+Test changed workflows proportionately, inspect rendered behavior and attempt all available evidence levels. Diagnose failures before changing code. Fix real defects, correct bad fixtures/checks from evidence and retain practical regression protection. Log consequential incidents once.
+
+Deliver the actual APK, complete matching source, build instructions, app ID/version/certificate, checksum and test reports. Capture source revision and dirty diff/tree identity where necessary. Do not claim byte-identical reproducibility unless configured and verified.
+
+Report all required incomplete scope, exact external dependencies and device procedures. Stop only when work/checks are complete or genuine external/tool/usage constraints prevent more safe work after independent actions are exhausted. Leave the current state, attempts, exact missing input and next procedure; no unsupported background promise.

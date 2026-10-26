@@ -1,0 +1,54 @@
+OWL ACOUSTICS — CONFIGURATION AND APPROVED ASSETS
+
+DISCOVERY CLASSIFICATION
+Before dependent code, use section 08. Actual room dimensions, scale, profile and equipment roles are runtime user inputs; library versions and tuning are delegated engineering choices; physical/device checks are verification. Asset, product-data, business and credential needs remain exact configuration dependencies. Do not demand that the owner answer all of them before independent local work.
+
+CONFIGURATION PRINCIPLE
+Code implements capabilities; configuration supplies validated product data, business terms and authorized integrations. Missing values are unknown/unavailable, not zero prices, assumed coefficients or successful mock transactions.
+
+PRODUCT ASSETS
+Use the final approved OWL Acoustics logo supplied by the owner. Keep its shape/identity intact and make it legible on the chosen UI. If the exact file is not supplied, use a clearly provisional text label during development and request the asset; final branding remains incomplete. Do not conduct a new logo-selection exercise or invent a replacement.
+
+Treatment visuals:
+- 2-inch wedge absorber, 2 × 4 ft.
+- Foam corner/bass trap, 2 × 1 × 1 ft class, using the specified LENRD-style appearance where supplied.
+- 3-inch flat absorber, 2 × 4 ft; explicit air gap if used.
+- 2 × 4 ft hanging wavy "~" cloud.
+- Proprietary A/B reflective diffuser in charcoal.
+Use charcoal treatment/cloud visuals. Auralex-style appearance is not permission to substitute an unrelated tested coefficient curve.
+
+The supplied product drawing is Assets/OWL_AB_Diffuser_Drawing.pdf. Assets/OWL_AB_Diffuser_Dimensions.json preserves its dimension labels for catalog geometry:
+each A/B panel's face spans 16.435 × 23.976 inches, with 5.047-inch maximum shown depth. The set contains one A and one B. Its 6.047-inch nested cutting-block dimension is not an installed single-panel depth.
+
+The drawing identifies nominal 3.0 lb/ft³ EPS for this reflective product; ester absorber foam is a different material family. Drawing dimensions/material labels are supplied design data, not an independent physical measurement or acoustic test. Inch labels and bracketed millimeter labels are rounded; preserve their source precision rather than inventing extra accuracy.
+
+Individual well/step dimensions are not numerically specified by this drawing. Use the illustration for visual identity/footprint and request authoritative profile data if exact per-step geometry is needed. Do not scale an illustration into manufacturing dimensions or derive validated diffusion coefficients from it.
+
+PERFORMANCE DATA
+Each quantitative product record needs OWL-facing ID/version, geometry, material, frequency-dependent values, measurement/model status, source, applicable mounting/air gap and limitations.
+OWL ester absorber foam is nominally 1.8–2.2 lb/ft³. Thickness/density or appearance alone do not establish absorption. Unknown third-party/DIY treatment receives no unsupported performance credit.
+No validated absorption/diffusion datasets or retail price table are supplied by this brief. Keep those fields absent/unavailable until legitimate data exists. Independent supported room geometry/placement calculations can still run.
+
+SERVICE CATALOG
+Before publishing an offering supply:
+package ID/version; name/description; inclusions/capability identifiers; availability/order; billing/service category; approved price/currency/provider references; delivery/fulfillment expectations; terms; and owner publication approval.
+Only configured implemented capabilities may be sold. Incomplete drafts remain private.
+Preserve immutable completed purchase terms and trusted customer/order references. A submitted expert request identifies its actual room revision/model snapshot, notes, consented shared assets and verified purchase; local edits do not silently mutate it. Catalog edits do not rewrite completed agreements.
+
+REMOTE PROCESSING
+Supply authorized service URL and user authorization flow; backend-only AI credentials/model configuration; appropriate consent/disclosure; supported media/duration/size; retention/deletion behavior; cost/rate controls; and operational ownership.
+Do not embed privileged secrets in the APK, use a shared privileged bearer as user identity, expose an unauthenticated service or upload room media just to test whether an endpoint works.
+Use current official provider documentation during implementation. A paid chat subscription does not itself configure or fund an application API.
+
+DEVELOPMENT VERSUS LIVE
+Use clearly isolated sandbox identities/data. No real charge, public deployment or room-media upload follows merely from building/testing code. A missing provider or package definition blocks that live operation, not new-project initialization or the local editor.
+
+PLATFORM DATA AND PERMISSION DEFAULTS
+Use silent geometry video and app-private source storage. No microphone permission or automatic public-gallery save is needed for that path. Configure explicit backup/transfer exclusions for private room/history/media and credentials and test actual platform behavior. The initial guarantee is local durability across finalization/restart, not uninstall/device-loss recovery.
+Primary implementation references, to recheck against the chosen SDK:
+https://developer.android.com/media/camera/camerax/video-capture
+https://developer.android.com/identity/data/autobackup
+
+WHAT THE BUILD DOES NOT REQUIRE
+A pre-existing app checkout, pre-existing progress/acceptance records, a saved-room import dataset or an external signing key is not required to initialize this new application.
+The app creates its own records and durable schema. Device tests, final approved branding, validated product data and live business/integration configuration still require the actual corresponding inputs.

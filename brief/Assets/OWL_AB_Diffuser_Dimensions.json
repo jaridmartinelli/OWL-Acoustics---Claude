@@ -1,0 +1,31 @@
+{
+  "product": "OWL A/B reflective diffuser set",
+  "source_asset": "OWL_AB_Diffuser_Drawing.pdf",
+  "data_status": "drawing-declared design geometry; not independent physical or acoustic validation",
+  "units_primary": "in",
+  "set_contents": {
+    "A": 1,
+    "B": 1
+  },
+  "per_panel_dimensions_in": {
+    "profile_width": "16.435",
+    "extrusion_length": "23.976",
+    "maximum_shown_depth": "5.047"
+  },
+  "bracketed_labels_mm": {
+    "width": "417.45",
+    "length": "609.00",
+    "maximum_depth_labels": [
+      "128.20",
+      "128.19"
+    ]
+  },
+  "nested_cutting_block_depth_in": "6.047",
+  "nested_cutting_block_depth_mm": "153.60",
+  "nested_dimension_use": "cutting/packing configuration; not installed single-panel depth",
+  "material_label": "3.0# EPS",
+  "nominal_density_lb_ft3": "3.0",
+  "individual_step_dimensions": "not numerically specified in this drawing",
+  "acoustic_coefficients": null,
+  "acoustic_performance_status": "not supplied as validated measurement data"
+}

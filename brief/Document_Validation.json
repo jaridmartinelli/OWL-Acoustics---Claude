@@ -1,0 +1,88 @@
+{
+  "package": "OWL Acoustics — Fresh Build",
+  "validated_date": "2026-10-25",
+  "validation_scope": "Document consistency, retained requirements and package integrity only. No Android build or app test was performed.",
+  "result": "PASS",
+  "project_instruction_characters_unicode": 7802,
+  "project_instruction_characters_utf16": 7809,
+  "project_instruction_packaging_budget": 8000,
+  "combined_sections": 8,
+  "combined_matches_all_split_core_documents": true,
+  "acceptance_coverage_rows": 70,
+  "routine_engineering_defaults": 20,
+  "material_input_categories": 10,
+  "unresolved_supplied_document_references": [],
+  "implementation_history_reference_matches": 0,
+  "retained_requirement_groups": {
+    "android_foldable_accessibility": {
+      "result": "PASS",
+      "missing_terms": []
+    },
+    "three_acquisition_paths": {
+      "result": "PASS",
+      "missing_terms": []
+    },
+    "canonical_geometry_and_exact_units": {
+      "result": "PASS",
+      "missing_terms": []
+    },
+    "window_and_door_interactions": {
+      "result": "PASS",
+      "missing_terms": []
+    },
+    "durable_history_and_async_safety": {
+      "result": "PASS",
+      "missing_terms": []
+    },
+    "ceilings_and_shared_3d": {
+      "result": "PASS",
+      "missing_terms": []
+    },
+    "purpose_setup_and_free_placement": {
+      "result": "PASS",
+      "missing_terms": []
+    },
+    "honest_scientific_methods": {
+      "result": "PASS",
+      "missing_terms": []
+    },
+    "treatment_reoptimization_and_data": {
+      "result": "PASS",
+      "missing_terms": []
+    },
+    "trusted_services_and_privacy": {
+      "result": "PASS",
+      "missing_terms": []
+    },
+    "requirements_discovery": {
+      "result": "PASS",
+      "missing_terms": []
+    },
+    "data_and_request_lifetime": {
+      "result": "PASS",
+      "missing_terms": []
+    },
+    "new_build_and_delivery": {
+      "result": "PASS",
+      "missing_terms": []
+    }
+  },
+  "product_drawing_byte_identity_preserved": true,
+  "quantitative_product_coefficients_supplied": false,
+  "application_implementation_status": "PLANNED",
+  "application_tests_executed": 0,
+  "application_verification": "UNVERIFIED",
+  "manual_review": [
+    "Discovery precedes dependent code; the early APK milestone follows closure.",
+    "Room inputs, delegated engineering, configuration, empirical checks and material owner decisions are separate.",
+    "Supplied requirements are not superseded by assistant-authored records.",
+    "Minimum ceiling/profile and basic geometric-acoustic operations have concrete contracts.",
+    "Silent/private capture, local data lifetime, explicit deletion and versioned service submission are defined.",
+    "New-project setup and authority agree across the prompt, Project instructions and CLAUDE.md.",
+    "Engineering defaults are distinct from fixed product requirements and material business inputs.",
+    "Isolated emulator tests are permitted; personal-device installation and publishing retain authorization boundaries.",
+    "The start guide requires both product asset files and distinguishes chat uploads from execution files.",
+    "Drawing dimensions/material labels are design data; profile detail and validated performance remain explicit inputs.",
+    "No unresolved product-instruction conflict needs an immediate user choice."
+  ]
+}

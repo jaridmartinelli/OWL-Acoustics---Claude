@@ -1,0 +1,79 @@
+{
+  "package": "OWL Acoustics — Fresh Build",
+  "edition_date": "2026-10-25",
+  "purpose": "Self-contained requirements and instructions for a new Android application.",
+  "files": [
+    {
+      "path": "00_START_HERE.txt",
+      "bytes": 3988,
+      "sha256": "e092f7a222451dece6ade05330b40c96cb51e22edf8d2406db8a4c3856e52da3"
+    },
+    {
+      "path": "01_PASTE_INTO_CLAUDE.txt",
+      "bytes": 4087,
+      "sha256": "0f4d6d533bb8752caeae17d38448d766fc7cb935e4f5bbd7f3c202869038e3cc"
+    },
+    {
+      "path": "02_CLAUDE_PROJECT_INSTRUCTIONS.txt",
+      "bytes": 7853,
+      "sha256": "695b877280eda6b5a7b5c8e205ab7bb098b57a7a3221c389c9e568ab12f781b4"
+    },
+    {
+      "path": "03_OWL_BUILD_SPEC.txt",
+      "bytes": 40702,
+      "sha256": "85e3ff342132c748b07ed1117714b8263e0ea80fd42e1280f9692058b6bf649a"
+    },
+    {
+      "path": "04_ENGINEERING_AND_DELIVERY.txt",
+      "bytes": 11534,
+      "sha256": "04992ec461ea5aec23fa83a0ca0762c64c73aaa628d041771a22b2a1e62aca91"
+    },
+    {
+      "path": "05_DECISIONS_AND_OPEN_ITEMS.txt",
+      "bytes": 7461,
+      "sha256": "3baea765b34df6e6ef226341ec207f7ae486fdf3ff025c5e9ec12e6e0e357c46"
+    },
+    {
+      "path": "06_ACCEPTANCE_AND_DEVICE_TESTS.txt",
+      "bytes": 22485,
+      "sha256": "5a3c912e483375f944eea43e2da522e349516ec2b9f6b55cc73958182b7f1d30"
+    },
+    {
+      "path": "07_CONFIGURATION_AND_ASSETS.txt",
+      "bytes": 5851,
+      "sha256": "85a113c0fb48500899dfbb53a99cdc324b07bf8a76ace1430ccb41216264f7ea"
+    },
+    {
+      "path": "08_REQUIREMENTS_DISCOVERY_AND_CLOSURE.txt",
+      "bytes": 14775,
+      "sha256": "f36f3fd6ce120a5c8c52a72e8af602dbab7c61f831fef274ac0127dbd422fe77"
+    },
+    {
+      "path": "CLAUDE.md",
+      "bytes": 3007,
+      "sha256": "1719b7511c32ebad56c6991fe806108fbd253963d759f5560728b22b0e0070f5"
+    },
+    {
+      "path": "OWL_Acoustics_Claude_Handoff.txt",
+      "bytes": 116197,
+      "sha256": "8cae1277b3efb91b50c6bfe6f883ef0bff3fed93679c2129fc7572b573c16172"
+    },
+    {
+      "path": "Assets/OWL_AB_Diffuser_Drawing.pdf",
+      "bytes": 52180,
+      "sha256": "903cc9e71261d1b2a559ae5a7e9202d4b56f48afd05242b81d20d6206815fc38"
+    },
+    {
+      "path": "Assets/OWL_AB_Diffuser_Dimensions.json",
+      "bytes": 995,
+      "sha256": "b85127fad41e3fd469914caa4fa58b11e9d0ca2b971403c5322372461a044a68"
+    },
+    {
+      "path": "Document_Validation.json",
+      "bytes": 3334,
+      "sha256": "016a5f6feb33fb4904bdb31f9f6880f1535cecbec06004f54191c83b92cbd064"
+    }
+  ],
+  "manifest_self_hash": "Intentionally omitted to avoid a circular digest.",
+  "application_build_or_test_evidence": "None. Acceptance procedures must be executed in the new project."
+}

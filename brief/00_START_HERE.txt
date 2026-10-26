@@ -1,0 +1,47 @@
+OWL ACOUSTICS — FRESH BUILD
+Complete development brief • 25 October 2026
+
+PURPOSE
+Build a new Android application from scratch. This package contains the product requirements, working instructions, implementation boundaries, configuration needs and acceptance plan needed for that new project.
+
+START
+1. Create a new Claude Project named OWL Acoustics — Fresh Build.
+2. Paste the COMPLETE contents of 02_CLAUDE_PROJECT_INSTRUCTIONS.txt into its Project instructions.
+3. Upload OWL_Acoustics_Claude_Handoff.txt as the complete build brief, plus both files in Assets/. Its sections contain the matching split documents; do not upload duplicate text unnecessarily.
+4. For implementation in Claude Code, extract the package into a dedicated new project directory, with CLAUDE.md at its root. Make the brief and Assets/ accessible in that actual session. A chat Project upload does not automatically place files in a Code filesystem.
+5. Send the COMPLETE contents of 01_PASTE_INTO_CLAUDE.txt once.
+6. Claude first performs the requirements-discovery checkpoint in section 08, resolving delegated details and identifying real dependent blockers. It then creates the project, implements connected workflows, builds, tests, fixes and verifies. If a real access/tool/usage limit stops execution, resume from this new project's saved source and progress record.
+
+CODE INSTRUCTIONS
+CLAUDE.md is the complete persistent instruction file for the new project. Place it in the new project root with the handoff documents accessible, or explicitly provide the combined brief. The app source is to be authored in this new project.
+
+PACKAGE CONTENTS
+01 — complete implementation prompt.
+02 — Claude Project instructions.
+03 — complete product specification.
+04 — engineering and delivery plan.
+05 — fixed requirements, routine defaults and material decisions.
+06 — acceptance and device plan.
+07 — configuration and approved asset needs.
+08 — requirements discovery, closure and minimum capability contracts before implementation.
+CLAUDE.md — persistent project instructions.
+OWL_Acoustics_Claude_Handoff.txt — combined core brief.
+Package_Manifest.json / Document_Validation.json — document/package integrity information, not app test results.
+
+INPUTS TO PROVIDE WHEN AVAILABLE
+The final approved logo, exact proprietary diffuser data/visuals, validated product performance and price data, and authorized credentials/configuration for live AI and purchases. The new app's local editor and supported geometry workflows must not require those remote services.
+
+The A/B diffuser drawing and its overall dimension labels are already included. Exact individual step/profile data, if needed, remains a separate input.
+
+A missing asset or configuration value must be identified specifically. Claude should finish independent code and verification, keep live offerings disabled until configured, and never replace missing data with invented measurements, coefficients, prices or service promises.
+
+DELIVERY EXPECTATION
+One coordinated build effort includes implementation, tests, repair and APK assembly. A single brief does not guarantee unlimited uninterrupted execution. The output must include a usable APK, the matching newly authored source, build instructions, actual evidence and all remaining limitations.
+
+A chat-only session can read the brief and author files. Actual APK assembly and runtime checks require an execution environment with Android build tools; unavailable tools must be reported rather than simulated. Use Claude Code for the connected implementation effort. This brief does not assume unlimited Pro usage or require a separate application API account for local editing.
+
+Official setup references:
+https://support.claude.com/en/articles/9517075-what-are-projects
+https://code.claude.com/docs/en/overview
+
+Only the supplied requirements, current explicit user decisions, approved product assets and current primary technical documentation define this build.

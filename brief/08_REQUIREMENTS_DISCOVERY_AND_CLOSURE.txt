@@ -1,0 +1,101 @@
+OWL ACOUSTICS — REQUIREMENTS DISCOVERY BEFORE IMPLEMENTATION
+
+OUTCOME
+Understand and close material requirements before writing dependent application code. Use the whole supplied brief; do not make the owner discover omissions by testing an incomplete build. Resolve ordinary engineering choices independently. Discover requirements thoroughly once, then reopen only for a real new decision, contradiction or feasibility finding.
+
+This is the pre-implementation procedure for this new application, not permission to replace the product specification or claim a capability exists. No earlier application source, implementation or test result is an input.
+
+1. ONE COMPLETE DISCOVERY PASS
+Read the complete product, engineering, decision, configuration and acceptance sections before starting feature implementation. Inspect actually supplied product assets. Consult current primary technical documentation where licensing, platform behavior or feasibility could change the design.
+
+Trace every acquisition path through editing, ceiling/3D, purpose/setup, placement, supported analysis, recommendations and save/reopen/history. For each operation identify:
+- trigger, user-visible outcome and exit/back behavior;
+- required inputs, source and unknown/conflicting states;
+- model/history changes and dependent-result invalidation;
+- failure, cancellation, retry and process-restart behavior;
+- offline/remote boundary, permissions and actual configuration;
+- applicable geometry/method and evidence needed for acceptance.
+
+Look particularly for vague terms such as supported, automatic, optimize, accurate, saved, permanent, complete, current and verified. Replace ambiguity with the definitions in this brief and observable acceptance. Do not replace a missing implementation with an unsupported label.
+
+2. CLASSIFY BEFORE ASKING
+Established product requirement: carry it forward; do not ask again.
+Routine engineering detail: choose a grounded reversible method, record material rationale and test it. Examples include storage engine, stable compatible dependency versions, numerical tolerance and screen-space gesture gain.
+Room-specific input: obtain it from the person using the app at the relevant step. Actual dimensions, scale reference, ceiling profile, purpose, equipment roles and immovable constraints are not a project-owner questionnaire.
+Asset/configuration input: define and validate its schema now; keep the dependent live operation unavailable until real data/authorization exists. Do not invent coefficients, prices, service promises or credentials.
+Empirical verification: specify and later execute the experiment on appropriate inputs/hardware. Physical accuracy is not resolved by asking the owner to guess a percentage.
+Unresolved material product/business decision: first check accessible approved information. Ask before dependent work only if the remaining choice changes behavior, scope, acceptance, cost, security, saved data, distribution or authorization and cannot be settled by delegated engineering judgment.
+
+A missing credential is not a missing product requirement. An experiment that needs a working implementation is not a reason to postpone all code. A stub is not proof of feasibility.
+
+3. ONE REQUIREMENTS-CLOSURE RECORD
+Use a Requirements discovery section in docs/DECISIONS.md, with links from the specification and PROGRESS.md; do not create competing duplicate logs. For each material gap record its requirement/acceptance IDs, uncertainty, classification, evidence, chosen resolution or exact missing input, affected operation, resolution owner, verification and independent work.
+
+Record defaults as engineering choices, never as owner approval. Implementation-generated records inherit this supplied brief. Writing a new decision entry cannot authorize a change to product scope or overwrite an explicit requirement.
+
+For a necessary question use the required small inline multiple-choice format, explain the consequence and recommendation, and include a clarify option where useful. Ask dependent questions in order; group only genuinely independent essential questions. Do not send a long speculative feature survey or require approval of the whole engineering plan. Silence is not a decision.
+
+4. REQUIRED CLOSURE COVERAGE
+The following rows clarify the existing scope. They do not assert completed code or measured performance.
+
+Starting point and authority
+New project, new source and new records. The supplied product requirements remain the baseline. Later explicit user decisions may supersede conflicting details; assistant-authored defaults and progress claims cannot.
+
+Capture and processing
+Video is the primary acquisition experience. Real on-device tracking/semantic observations and the configured chronological-frame OpenAI service have distinct responsibilities. Select actual commercially compatible components and document their contract. AR/depth is an optional supplement, never the only way to use the app. The required offline promise covers local room work and supported local calculations; this brief makes no claim that fully automatic offline metric reconstruction is already feasible or proven. Do not advertise it without evidence. Validate the risky processing path early after requirements closure rather than leaving all feasibility testing until delivery.
+Record visual room video without audio as the initial engineering default; no microphone permission is needed for geometry capture. Actual room-media uploads require the configured purpose and consent. Preserve the 60-second server-route clip limit and targeted follow-ups.
+
+Floor-plan import
+Let the user select a document/page and one room, identify a known-length segment and its unit, and trace/correct the outline when needed. Preserve the mapping between source pixels and room coordinates. A second conflicting reference must surface a scale conflict rather than silently resize the room. Multi-room source documents do not create coupled rooms automatically. Source replacement or recalibration invalidates dependent geometry/results while preserving observations and an undoable correction.
+
+Canvas and openings
+Use the exact selected-wall, direct-corner, inline-measurement, snapping, window and door rules. Document wall-local axes and endpoint anchors. Edits, numeric fields and rendering must agree. Cancellation and invalid exact input restore the last committed valid state. Coordinate/view conventions are engineering choices; they never create physical evidence.
+
+History and saving
+Model, history/cursor and result invalidation form one consistent commit. Saved means durable success. Meaningful history is retained within this app's saved room across finalization/restart; it is not a promise of recovery after uninstall, clear-storage or device loss. Cloud sync/export is outside this build. Explicitly configure/test Android backup and transfer behavior rather than inheriting an undisclosed data-upload route.
+
+Ceiling geometry
+Support the ordinary declared shape families with their actual profile inputs; do not mark every family complete by saving an unsupported draft. Use these minimum input contracts:
+- Flat: supplied height above the model floor datum.
+- Single slope: located height references and slope direction/span.
+- Peaked/vaulted/cathedral: ridge location/orientation/height and independently supplied side/eave geometry; symmetry is an explicit room input.
+- Vaulted with flat center: located plateau extent/height and the surrounding slopes/eaves.
+- Arched: an explicitly identified matching curve or supplied sampled profile with span/orientation; label sampled/tessellated approximation. Do not silently substitute a semicircle.
+- Tray/raised center: base/raised heights, step transition and center region/insets that fit the actual room polygon.
+- Dropped construction, beams and coffers: actual affected regions, locations and vertical dimensions; unknown detail does not become a standard depth.
+Use one polygon/profile source for 2D/3D. A genuine unresolved special/mixed profile can stay a draft. Geometric representation and acoustic method eligibility are independent gates.
+
+Purpose and setup
+Keep all ten named profiles. Playback uses the actual speaker/channel layout and listener; recording uses actual voice/instrument sources and microphone receivers; a podcast can have several talker/microphone pairs. Other requests a plain-language intended use and relevant roles, without inventing a quantitative target. Stereo is a reversible offered default only for Mixing and Hi-Fi. Do not translate every room into two speakers and one listener.
+
+Minimum basic acoustic behavior
+Required independent operations include true geometry/dimensions, constrained in-room placement candidates, deterministic first-order reflection geometry on known supported planar surfaces, and rectangular modal predictions only for the documented compatible room model. Reflection eligibility is determined by the real bounded surface, opening/aperture and source/receiver geometry. An irregular floor plan does not justify replacing its polygon with a box or disabling every otherwise valid wall-reflection path. An unsupported curved-ceiling bounce does not turn valid planar-wall results into a whole-room simulation.
+Show relevant path points/distances and modeled delay where supported. Use a documented sound-speed assumption. SBIR guidance states its boundary/path assumptions; no measured dip depth, severity or full frequency response is inferred. Missing vertical data can block a particular path while leaving independent work usable.
+For each optimization define its actual inputs, movable/fixed variables, feasible region, objective, comparisons and limits before coding it. Use relevant geometric criteria and scientifically supported methods, not arbitrary scores or random coordinates. Without a justified quantitative purpose target, provide bounded geometric guidance and clearly identify the target-dependent result that is unavailable. A guessed global optimum or unranked random suggestions do not satisfy optimization. Additional physics is deferred; required basic behavior is not.
+
+Placement and recommendations
+Preview a placement proposal and its reasons before applying it. Applying an accepted proposal makes one meaningful undoable edit; do not silently move the user's declared setup. Respect immovable constraints and compare the relevant before/after geometry. Show a valid buy-nothing result. Full/Budget constraints require fresh optimization. Missing real prices blocks a monetary-budget claim; missing product performance blocks quantitative treatment-benefit/quantity claims. A descriptive catalog or diagram is not evidence of an acoustic improvement.
+
+Room management and data lifecycle
+Provide a minimal saved-room selector with create/open/rename and explicit deletion. Room deletion explains that this room's geometry, history and owned source media will be removed; require confirmation, cancel its jobs and reject late callbacks. A shared imported source must not be deleted while another room still owns it. Room deletion does not silently revoke a purchase or erase separately required purchased terms. Do not add a trash/archive/export/cloud system without approved scope.
+
+Expert help and purchases
+Keep special/mixed drafts editable without payment. Package data, authoritative price, entitlements and fulfillment have distinct ownership. Before a real service request, show the room/revision, notes and data to be shared. Bind a submitted request to a specific room-model snapshot/revision and verified purchase; later local edits do not silently change the submitted request. Raw media is shared only when needed and explicitly authorized. Delivery channel, turnaround, update policy and other business promises remain package configuration, not invented code defaults.
+
+Privacy and deployment
+Use app-private storage for room data and sources; do not automatically place capture video in a public gallery. Keep backend/admin credentials out of the client, scope authorization and separate local editing from remote accounts. Initially exclude private room/history/media and credentials from automatic app backup/transfer through the applicable platform rules, and test actual behavior. Explain the resulting local-storage limits; do not promise protection from uninstall/device loss. Android version/manufacturer behavior must be checked. Public publishing, personal-device installation, live charges and live uploads retain their actual authorization boundaries; isolated emulator testing is permitted.
+
+Assets, licensing and empirical evidence
+The included diffuser drawing is product design data. Final logo, exact profile data when needed, validated product performance and actual prices remain their stated inputs. Select compatible licenses and keep confidential sourcing out of shipped data. Device/foldable/camera/physical-reference testing is verification owed, not an owner guess or already-passed condition.
+
+5. START CONDITION AND STOP CONDITION
+Before feature implementation, map every active requirement to an observable acceptance case, reconcile contradictions, define interfaces/data ownership and classify every material unknown. Close engineering choices within delegated authority. Resolve a truly blocking material user decision before its dependent work. Permit implementation of independent operations once their requirements are closed, with remaining configuration/empirical dependencies visible.
+
+The initial APK milestone follows this discovery checkpoint. Source-producing feasibility work belongs to the implementation stage, with concrete tests and honest findings; it must not quietly revise the approved promise.
+
+Stop discovery when another search or question is unlikely to change the design, avoid a material defect or remove consequential rework. Do not require every future room dimension, business value or hardware result before creating useful independent code. Do not start dependent code with an unacknowledged material assumption.
+
+6. CURRENT CLOSURE STATE
+The supplied brief fixes the product journey and interaction requirements. Routine implementation choices are delegated. B-01 through B-10 list the real asset, product-data, business, integration, release and empirical inputs still needed at their dependent gates. Their existence does not authorize invented values or a full-readiness claim.
+
+This audit found no additional unresolved owner decision necessary to define the independent local build. If execution discovers contradictory approved evidence or a material feasibility failure, preserve the requirement, explain the specific consequence and ask the smallest necessary question before changing it.

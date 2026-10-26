@@ -1,0 +1,34 @@
+Build OWL Acoustics as a brand-new Android application from scratch using this complete brief.
+
+Use an empty project directory, or create a dedicated new one. Author the application source, tests, configuration and documentation in that project. Use the supplied requirements, current explicit decisions, approved assets and current official technical documentation.
+
+Read 02_CLAUDE_PROJECT_INSTRUCTIONS.txt through 08_REQUIREMENTS_DISCOVERY_AND_CLOSURE.txt. If I supplied OWL_Acoustics_Claude_Handoff.txt, the complete matching sections are inside it; use that text without demanding separate copies. Make sure the brief is accessible in the actual Code session.
+
+Before dependent application code, complete section 08 once: trace the full workflows and failure states, reconcile approved requirements, define minimum capability/data contracts and map observable acceptance. Classify room inputs, missing configuration, empirical checks and ordinary engineering choices separately. Close delegated details yourself. Ask only for a genuinely unresolved material owner decision before its dependent work; continue independent work. Record the closure table in docs/DECISIONS.md. Do not turn discovery into a recurring approval gate.
+
+Create these records for this new project:
+docs/OWL_MASTER_SPEC.md — requirements and acceptance.
+docs/DECISIONS.md — explicit decisions and labeled engineering choices.
+PROGRESS.md — actual source/build/runtime evidence, incomplete work and blockers.
+Initialize status truthfully; no feature or test is already proven.
+
+Implement the entire specified workflow:
+video capture OR calibrated floor-plan import OR manual room creation
+→ shared canvas-first 2D editing/correction
+→ ceiling definition and faithful supported 3D review
+→ purpose and relevant setup
+→ free placement optimization
+→ supported acoustic analysis and justified recommendations
+→ reliable save/reopen with permanent meaningful per-room undo/redo.
+
+Honor the exact window, door, inline measurement, history, geometry and uncertainty rules. Buying nothing is valid. Do not fabricate captured geometry, scale, acoustic coefficients, accuracy, live prices or completed functionality.
+
+Build in coherent connected slices and continue through all safe authorized work. Establish the repeatable APK build early after requirements closure. Implement real processing, canonical state, persistence, recovery and verification; do not stop after a plan, shell UI or first passing build.
+
+Choose routine libraries, algorithms and reversible interaction tuning using the stated defaults. Ask only about a genuinely unresolved material user/business decision that changes outcome, cost, security, data, distribution or authorization. Resolve what accessible approved information and professional judgment can settle. Continue independent work while a decision or credential is pending.
+
+Local room creation/editing must work without login, ARCore or a server. Implement clean secure interfaces for configured AI analysis and service purchases. Keep credentials privileged on the backend and incomplete offerings unpublished. Use an isolated emulator for available runtime tests. Live deployment, charges, room-media uploads and installation on my personal device require their corresponding authorization; generating code alone does not provide it.
+
+Use the acceptance plan to verify mathematical/data behavior, rendered interactions, lifecycle, save/reopen/history, current-result invalidation and configured integrations. Repair confirmed defects and add useful regression protection. Keep compilation, running-app, physical-device and physical-accuracy evidence separate.
+
+Deliver the actual APK, matching complete source, reproducible build instructions, package/signing information, checksum, relevant test evidence and an honest readiness dashboard. Reconcile every active requirement before declaring completion. If only a real external/tool/usage boundary remains, finish independent work and provide a concrete checkpoint with the exact missing input and next procedure.
