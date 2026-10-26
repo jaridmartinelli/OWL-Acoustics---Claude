@@ -30,9 +30,12 @@ data class SessionState(
     val unsaved: UnsavedWork?,
     val results: List<StoredResult>,
     val closed: Boolean = false,
+    /** A commit is being written; the shown state is not yet durable. */
+    val writing: Boolean = false,
 ) {
     val model: RoomModel get() = history.current
-    val saved: Boolean get() = unsaved == null
+    /** Saved means durably written: no failed write pending and no write in progress. */
+    val saved: Boolean get() = unsaved == null && !writing
     fun currentResult(kind: String): StoredResult? {
         val h = inputHash(model)
         return results.firstOrNull { it.kind == kind && it.generation == generation && it.inputHash == h }
@@ -114,13 +117,13 @@ class RoomSession private constructor(
         generation += 1
         val nextHead = head.copy(updatedMs = clock(), generation = generation, results = emptyList())
         // expose the attempted state immediately with invalidated results; it is unsaved until the write succeeds
-        publish { it.copy(history = next, generation = generation, results = emptyList()) }
+        publish { it.copy(history = next, generation = generation, results = emptyList(), writing = true) }
         return try {
             head = store.commit(head, prev, next, nextHead)
-            publish { it.copy(durable = next, history = next, unsaved = null) }
+            publish { it.copy(durable = next, history = next, unsaved = null, writing = false) }
             SaveOutcome.Saved
         } catch (e: StoreException) {
-            publish { it.copy(unsaved = UnsavedWork(next, e.message ?: "Storage error")) }
+            publish { it.copy(unsaved = UnsavedWork(next, e.message ?: "Storage error"), writing = false) }
             SaveOutcome.Failed(e.message ?: "Storage error")
         }
     }

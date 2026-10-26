@@ -434,4 +434,12 @@ private fun RoomPanel(vm: RoomViewModel, m: RoomModel, select: (Sel) -> Unit) {
         }
         Note("A ceiling height is not needed to confirm the plan.")
     }
+    HorizontalDivider(Modifier.padding(vertical = 6.dp))
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(if (m.finalized) "Room finalized. You can still edit it, and undo/redo keeps its full history." else "Finalize when you are happy with this room. It stays editable.",
+            Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+        OutlinedButton({ vm.edit { Workflow.setFinalized(it, !m.finalized) } }, modifier = Modifier.testTag("finalize")) {
+            Text(if (m.finalized) "Mark as draft" else "Finalize room")
+        }
+    }
 }

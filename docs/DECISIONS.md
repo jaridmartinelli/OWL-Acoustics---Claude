@@ -65,3 +65,11 @@ material owner decision.
   Central mirror is listed before `mavenCentral()` in `settings.gradle.kts`. Reversible.
 - E-002 (2026-10-26) No `/dev/kvm` in the build container, so the Android emulator cannot run here;
   Robolectric is used for JVM-hosted Compose interaction tests and labeled accordingly.
+- E-003 (2026-10-26) Lint suggests merging `mipmap-anydpi-v26` into `mipmap-anydpi` (minSdk 26), but AAPT then
+  fails to resolve the adaptive launcher icon in this toolchain; the `-v26` folder is kept and the lint warning
+  is accepted.
+- E-004 (2026-10-26) Room naming/renaming is inline on the screen rather than in a modal dialog (also avoids a
+  Robolectric idling problem with text fields inside dialogs). Plan view controls sit in a toolbar outside the
+  canvas so they never cover geometry (I-05). Wall length labels are drawn 32 dp outside the wall (I-06).
+- E-005 (2026-10-26) Startup media revalidation deletes unregistered media bytes (interrupted recordings) and marks
+  registered media with missing bytes as unavailable.

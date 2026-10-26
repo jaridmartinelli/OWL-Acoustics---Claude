@@ -32,10 +32,18 @@ class AppContainer(context: Context) {
 
     private val sessions = HashMap<String, RoomSession>()
 
-    init { runCatching { store.cleanupInterruptedDeletes() } }
+    init {
+        runCatching { store.cleanupInterruptedDeletes() }
+        // no capture can be active at process start, so unregistered bytes are interrupted recordings
+        runCatching { media.revalidate() }
+    }
 
     @Synchronized
     fun listRooms(): List<RoomListEntry> = store.listRoomIds().map { id ->
+        // an open room is described from its live session rather than re-reading files mid-commit
+        sessions[id]?.state?.value?.takeIf { !it.closed }?.let { st ->
+            return@map RoomListEntry(id, st.name, System.currentTimeMillis(), st.durable.current.finalized, null)
+        }
         when (val r = store.load(id)) {
             is LoadResult.Ok -> RoomListEntry(id, r.head.name, r.head.updatedMs, r.history.current.finalized, null)
             is LoadResult.UnknownFuture -> RoomListEntry(id, id, 0, false, "Saved by a newer app version (format ${r.schema}); left untouched.")

@@ -93,6 +93,12 @@ class RoomStore(val root: Path, private val io: DurableIo = DurableIo()) {
     fun encodeHead(h: RoomHead) = OwlJson.encodeToString(RoomHead.serializer(), h).toByteArray()
 
     fun load(id: String): LoadResult {
+        val first = loadOnce(id)
+        // a concurrent commit may switch history epochs between reading the head and the history file
+        return if (first is LoadResult.Corrupt && first.reason == "history file missing") loadOnce(id) else first
+    }
+
+    private fun loadOnce(id: String): LoadResult {
         val hp = headPath(id)
         val raw = try { io.readOrNull(hp) } catch (e: Exception) { return LoadResult.Corrupt(id, "unreadable head: ${e.message}") }
             ?: return LoadResult.Missing(id)
@@ -122,10 +128,8 @@ class RoomStore(val root: Path, private val io: DurableIo = DurableIo()) {
             validBytes = pos.toLong()
         }
         if (head.cursor !in entries.indices) return LoadResult.Corrupt(id, "cursor out of range")
-        if (hbytes.size > validBytes) {
-            // Bytes beyond the committed count come from an interrupted append; the head never referenced them.
-            try { io.truncate(hf, validBytes) } catch (_: Exception) { }
-        }
+        // Bytes beyond the committed entries (an interrupted append, or a commit in flight in another reader's
+        // view) are ignored here and never modified: loading is read-only. The next append truncates to historyBytes.
         return LoadResult.Ok(head.copy(historyBytes = validBytes), History(entries, head.cursor))
     }
 

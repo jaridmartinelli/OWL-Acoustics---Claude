@@ -63,6 +63,25 @@ class MediaStore(private val root: Path, private val io: DurableIo = DurableIo()
         save(list.map { if (it.id == id) it.copy(deleted = true) else it })
     }
 
+    /**
+     * Startup revalidation: removes media bytes that were never registered (e.g. a recording interrupted by process
+     * death) and marks registered records whose bytes are missing as unavailable. Call only when no capture is active.
+     */
+    @Synchronized
+    fun revalidate(): Int {
+        if (!Files.isDirectory(dir)) return 0
+        val list = all()
+        val known = list.map { it.fileName }.toSet()
+        var removed = 0
+        Files.list(dir).use { s -> s.toList() }.forEach { f ->
+            val name = f.fileName.toString()
+            if (name != "index.json" && !name.endsWith(".tmp") && name !in known) { Files.deleteIfExists(f); removed++ }
+        }
+        val fixed = list.map { if (!it.deleted && !Files.exists(fileFor(it))) it.copy(deleted = true, note = "file missing at startup") else it }
+        if (fixed != list) save(fixed)
+        return removed
+    }
+
     /** Room deletion: drops this room's ownership; bytes are deleted only when no other room owns the source. */
     @Synchronized
     fun releaseRoom(roomId: String) {

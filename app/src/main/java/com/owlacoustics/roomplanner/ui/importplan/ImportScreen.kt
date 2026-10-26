@@ -221,6 +221,13 @@ fun ImportScreen(vm: RoomViewModel, m: RoomModel, media: MediaStore, onDone: () 
                     if (r.id != cal.activeReferenceId && mpp != null) TextButton({ vm.edit { Calibration.recalibrate(it, r.id) } }) { Text("Use this one") }
                 }
             }
+            var confirmDelete by remember { mutableStateOf(false) }
+            TextButton({ confirmDelete = true }) { Text("Delete the imported file") }
+            if (confirmDelete) androidx.compose.material3.AlertDialog(onDismissRequest = { confirmDelete = false },
+                title = { Text("Delete the imported plan file?") },
+                text = { Text("The file is removed from this phone (unless another room still uses it). The scale and traced outline stay. Undo will not bring the file back.") },
+                confirmButton = { TextButton({ rec?.let { r -> if (r.owners.size > 1) media.register(r.copy(owners = r.owners - m.id)) else media.deleteMedia(r.id) }; bitmap = null; confirmDelete = false }) { Text("Delete") } },
+                dismissButton = { TextButton({ confirmDelete = false }) { Text("Keep") } })
             for (c in Calibration.conflicts(cal)) Text("Scale conflict: two references disagree by %.1f%%. The room was not resized; choose which reference is right.".format(c.ratio * 100), color = MaterialTheme.colorScheme.error)
             Note("Only this one room is traced. Other rooms on the plan are not modeled.")
         }

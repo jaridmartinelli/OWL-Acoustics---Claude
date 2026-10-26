@@ -89,6 +89,7 @@ class PersistenceTest {
         val s = RoomSession.create(st, Templates.newRoom("roomA"), "A")
         val durableBefore = s.state.value.model
         val headBytes = Files.readAllBytes(st.roomDir("roomA").resolve("head.json"))
+        assertTrue(s.state.value.saved)
         failing = "append"
         val out = edit(s) { Edits.moveWall(it, it.vertices[1].wallId, 0.5) }
         assertTrue(out is SaveOutcome.Failed)
@@ -129,10 +130,28 @@ class PersistenceTest {
         val dir = st.roomDir("roomA")
         val hf = Files.list(dir).use { it.filter { p -> p.fileName.toString().startsWith("history-") }.findFirst().get() }
         Files.write(hf, "{\"seq\":99, partial".toByteArray(), java.nio.file.StandardOpenOption.APPEND)
+        val sizeWithGarbage = Files.size(hf)
         val s2 = reopen(RoomStore(tmp.root.toPath()), "roomA")
         assertEquals(2, s2.state.value.history.entries.size)
+        // loading never modifies files (another session may be mid-commit); repair happens on the next append
+        assertEquals(sizeWithGarbage, Files.size(hf))
         edit(s2) { Edits.moveWall(it, it.vertices[2].wallId, 0.5) }
         assertEquals(3, reopen(RoomStore(tmp.root.toPath()), "roomA").state.value.history.entries.size)
+    }
+
+    @Test fun concurrentListingDuringCommitsNeverCorruptsHistory() = runBlocking {
+        val st = store()
+        val s = RoomSession.create(st, Templates.newRoom("roomA"), "A")
+        val reader = Thread {
+            repeat(400) { val r = RoomStore(tmp.root.toPath()).load("roomA"); check(r is LoadResult.Ok) { "reader saw $r" } }
+        }
+        reader.start()
+        repeat(150) { i -> edit(s) { Edits.moveVertex(it, it.vertices[1].id, it.vertices[1].pos + com.owlacoustics.domain.geometry.Vec2(if (i % 2 == 0) 0.01 else -0.01, 0.0)) } }
+        s.undo(); edit(s) { Edits.moveWall(it, it.vertices[2].wallId, 0.1) } // branch → new epoch while reading
+        reader.join()
+        val r = reopen(RoomStore(tmp.root.toPath()), "roomA").state.value
+        assertEquals(s.state.value.history.entries.map { it.label }, r.history.entries.map { it.label })
+        assertEquals(s.state.value.model, r.model)
     }
 
     @Test fun corruptAndFutureFilesAreNotOverwritten() {
@@ -208,6 +227,20 @@ class PersistenceTest {
         media.deleteMedia("m1")
         assertFalse(Files.exists(f))
         assertTrue(media.all().single().deleted)
+    }
+
+    @Test fun startupRevalidationRemovesUnregisteredBytesAndFlagsMissingFiles() {
+        val root = tmp.root.toPath()
+        val media = MediaStore(root)
+        val orphan = media.newFile("partial", "mp4"); Files.write(orphan, byteArrayOf(9))
+        val kept = media.newFile("m1", "mp4"); Files.write(kept, byteArrayOf(1))
+        media.register(MediaRecord("m1", MediaKind.VIDEO, "m1.mp4", listOf("roomA"), "capture", 0))
+        media.register(MediaRecord("m2", MediaKind.VIDEO, "m2.mp4", listOf("roomA"), "capture", 0))
+        assertEquals(1, media.revalidate())
+        assertFalse(Files.exists(orphan))
+        assertTrue(Files.exists(kept))
+        assertTrue(media.all().single { it.id == "m2" }.deleted)
+        assertFalse(media.all().single { it.id == "m1" }.deleted)
     }
 
     @Test fun interruptedDeletionIsCompleted() {

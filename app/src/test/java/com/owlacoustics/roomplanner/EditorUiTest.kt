@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
@@ -66,12 +67,17 @@ class EditorUiTest {
         rule.waitForIdle()
     }
 
+    /** Room creation and list loading run on IO, which Compose idling does not track: wait for the node itself. */
+    private fun waitForTag(tag: String, timeoutMs: Long = 8000) {
+        rule.waitUntil(timeoutMs) { rule.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
+    }
+
     private fun createManualRoom(name: String) {
         rule.onNodeWithTag("new-manual").performClick()
         rule.onNodeWithTag("new-room-name").performTextInput(name)
         rule.onNodeWithTag("create-room").performClick()
         waitFor { container.listRooms().isNotEmpty() }
-        rule.onNodeWithTag("plan-canvas").assertExists()
+        waitForTag("plan-canvas")
     }
 
     private fun canvas(): SemanticsNodeInteraction = rule.onNodeWithTag("plan-canvas")
@@ -112,15 +118,16 @@ class EditorUiTest {
         val area = Polygons.area(model().outline)
 
         rule.onNodeWithTag("undo").performClick()
-        waitFor { abs(model().vertices[2].x - v.x) < 1e-12 }
+        waitFor { abs(model().vertices[2].x - v.x) < 1e-12 && state().saved }
         rule.onNodeWithTag("redo").assertIsEnabled()
 
         // activity recreation (rotation/config change) keeps the room, its history cursor and redo branch
         rule.activityRule.scenario.recreate()
-        rule.onNodeWithTag("plan-canvas").assertExists()
+        waitForTag("plan-canvas")
         rule.onNodeWithTag("redo").assertIsEnabled().performClick()
         waitFor { abs(Polygons.area(model().outline) - area) < 1e-12 }
 
+        waitFor { state().saved }
         // a fresh store reading the same files sees exactly the same history (process-restart analogue)
         val r = RoomStore(container.store.root).load(state().roomId) as LoadResult.Ok
         assertEquals(state().history.cursor, r.history.cursor)
@@ -143,7 +150,7 @@ class EditorUiTest {
         waitFor { model().openings.size == 1 }
         val win = model().openings.single()
         assertEquals(OpeningKind.WINDOW, win.kind)
-        rule.onNodeWithText("Window on wall 1", substring = true).assertExists()
+        rule.onNodeWithText("Window on wall 1", substring = true, useUnmergedTree = true).assertExists()
 
         // window centre dragged along the wall moves it with width unchanged (fit is recomputed after pan reset)
         m = model()
@@ -179,6 +186,7 @@ class EditorUiTest {
         val door = model().openings.first { it.kind == OpeningKind.DOOR }
         val dw = model().wall(door.wallId)!!
         val dc = t2.toScreen(dw.pointAt(door.offset + door.width / 2))
+        rule.waitUntil(8000) { rule.onAllNodesWithText("Door on wall 3", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
         // the new door is already selected, so one tap on its highlighted region cycles the swing drawing
         canvas().performTouchInput { click(dc) }
         waitFor { model().openings.first { it.id == door.id }.handing == DoorHanding.HINGE_START_IN }
@@ -190,6 +198,15 @@ class EditorUiTest {
         createManualRoom("Den")
         rule.onNodeWithTag("confirm-plan").performClick()
         waitFor { model().planConfirmed }
+        // finalization is a reversible state: the room reopens straight into the editor with its history
+        rule.onNodeWithTag("finalize").performScrollTo().performClick()
+        waitFor { model().finalized }
+        rule.onNodeWithTag("back-to-rooms").performClick()
+        waitForTag("room-Den")
+        rule.onNodeWithTag("room-Den").performClick()
+        waitForTag("plan-canvas")
+        rule.onNodeWithTag("plan-canvas").assertExists()
+        rule.onNodeWithTag("undo").assertIsEnabled()
         rule.onNodeWithTag("tab-CEILING").performScrollTo().performClick()
         rule.onNodeWithTag("ceiling-FLAT").performClick()
         waitFor { model().ceiling.profile is CeilingProfile.Flat }
@@ -242,12 +259,14 @@ class EditorUiTest {
     @Test fun roomDeletionNeedsConfirmationAndKeepsOtherRooms() {
         createManualRoom("Keep me")
         rule.onNodeWithTag("back-to-rooms").performClick()
+        waitForTag("new-manual")
         rule.onNodeWithTag("new-manual").performClick()
         rule.onNodeWithTag("new-room-name").performTextInput("Delete me")
         rule.onNodeWithTag("create-room").performClick()
         waitFor { container.listRooms().size == 2 }
+        waitForTag("back-to-rooms")
         rule.onNodeWithTag("back-to-rooms").performClick()
-        rule.onNodeWithTag("room-Delete me").assertExists()
+        waitForTag("room-Delete me")
         rule.onNode(hasText("Delete") and hasAnyAncestor(hasTestTag("room-Delete me"))).performClick()
         rule.onNodeWithTag("confirm-delete").performClick()
         waitFor { container.listRooms().size == 1 }
