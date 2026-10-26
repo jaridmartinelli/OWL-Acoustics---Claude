@@ -8,7 +8,7 @@ UNVERIFIED or BLOCKED even when their JVM evidence passes. Coverage rows are not
 | Case | Required level | Outcome | Evidence (this revision) | Next procedure / prerequisite |
 |---|---|---|---|---|
 | F-01 | Source/artifact inspection | **PASS** | New repo content: brief/, records, Gradle project, source, tests; no prior checkout used. | — |
-| F-02 | Build logs | **PASS** | `./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` succeeded (94 tests, lint 0 errors). | — |
+| F-02 | Build logs | **PASS** | `./gradlew :domain:test :app:testDebugUnitTest :app:lintDebug :app:assembleDebug` succeeded (104 tests, lint 0 errors). | — |
 | F-03 | Artifact inspection | **PASS** | aapt2 badging + apksigner: `com.owlacoustics.roomplanner.dev` 1 / 0.1.0-dev, debug certificate digest and APK SHA-256 in PROGRESS.md. | — |
 | F-04 | Clean-environment rebuild | **PASS** | Fresh clone of 7fc608b + empty Gradle home: tests, lint and assembleDebug succeeded (4 m 49 s). Different APK bytes than the original build; byte identity is not claimed. | — |
 | F-05 | Running app + device | **BLOCKED** | Permission request at point of use, denial text and manual/import fallback implemented (CaptureScreen). | Run on emulator/device: grant, deny, re-grant, cold start. Needs KVM emulator or authorised device. |

@@ -25,7 +25,7 @@ passed; nothing is RUNTIME-TESTED (no emulator) or DEVICE-VERIFIED.
 | Exact units and numeric entry | BUILD-TESTED | Rational storage, ft-in fractions, metric, unknown ≠ 0. |
 | Canonical model, validation, provenance | BUILD-TESTED | Original observations stored outside undo (`evidence.json`). |
 | Manual creation + starting shapes | BUILD-TESTED | 12 × 10 ft planning rectangle, L, alcove, angled. |
-| Canvas editor (select-first walls, corners, split, alcove, angle, inline values, snap, pan/zoom/rotate) | BUILD-TESTED | JVM-rendered; device gesture tuning owed. |
+| Canvas editor (select-first walls, corners, split, alcove, angle, inline values, snap, pan/zoom/rotate) | BUILD-TESTED | Redesigned 2026-10-26 from review research (docs/BUILDER_UX_RESEARCH.md): Room size card, keep-corners-square lengths, tape shorthand, live interpretation, walk-around Next, snapping engine with guides/haptics, drag readout, corner marks, Make 90°, nudge steps, auto-refit. Device tuning owed. |
 | Windows/doors (anchors, hybrid gestures, swing tap, vertical data) | BUILD-TESTED | |
 | Durable history, autosave, failure recovery, room isolation, job generations | BUILD-TESTED | JVM fault injection; Android disk behaviour owed. |
 | Room management (create/open/rename/confirmed delete) | BUILD-TESTED | |
@@ -47,7 +47,7 @@ passed; nothing is RUNTIME-TESTED (no emulator) or DEVICE-VERIFIED.
 
 ## Evidence for this revision
 
-- Tests: **94 executed, 0 failed — 89 domain JVM tests (units, geometry, edits, openings, persistence incl. fault injection and concurrent reads, ceilings/mesh, acoustics, placement/recommendations, services/capture/import, long-history workload) + 5 Robolectric JVM-rendered UI tests; the UI suite passed 5 consecutive reruns.**
+- Tests: **104 executed, 0 failed — 98 domain JVM tests + 6 Robolectric JVM-rendered UI tests (incl. the persona builder test); UI suite passed 3 consecutive reruns after the builder redesign.**
 - Lint (`:app:lintDebug`): 0 errors, 1 warning (`ObsoleteSdkInt` on `mipmap-anydpi-v26`; renaming the folder made AAPT
   fail to find the adaptive icon, so the folder is kept — E-003), 1 hint (monochrome icon present).
 - Clean-clone rebuild (F-04): **PASS — fresh clone of revision 7fc608b with an empty Gradle home ran tests, lint and assembleDebug successfully. APK bytes differ between builds (not configured for byte-identical output).**
@@ -56,7 +56,7 @@ passed; nothing is RUNTIME-TESTED (no emulator) or DEVICE-VERIFIED.
 - APK: `app/build/outputs/apk/debug/app-debug.apk` · package `com.owlacoustics.roomplanner.dev` · versionCode 1 ·
   versionName 0.1.0-dev · min/target SDK 26/36 · permissions: CAMERA only · `allowBackup=false` with
   data-extraction and legacy full-backup exclusions · signer: Android Debug (this build machine) ·
-  signer certificate SHA-256 `a574fd584735a1669087c1a0f5541b91f512f6d3def2243313324d929ffc8fb3` · APK SHA-256 `8c9d295b5a749c1a277ada238816f7a567fd3ad139837353c2605fb59380c558` (built from the committed tree of this revision; rebuilding gives different bytes).
+  signer certificate SHA-256 `a574fd584735a1669087c1a0f5541b91f512f6d3def2243313324d929ffc8fb3` · APK SHA-256 `7ab13df8cd58b6556cb2c62898348a3e2173b7cf4c0a192d226257d2a103d77e` (built from the committed tree of this revision; rebuilding gives different bytes).
 - APK scan: no RECORD_AUDIO, no brief/records files, no API keys, no supplier identities.
 
 ## Incidents (consequential, logged once)
@@ -71,6 +71,7 @@ passed; nothing is RUNTIME-TESTED (no emulator) or DEVICE-VERIFIED.
 | I-06 | A centred window's touch band overlapped the wall's length label. | Label offset 16 dp inside the 22 dp opening band; labels hit-tested first. | Labels at 32 dp; openings hit-tested before labels. | EditorUiTest window drag |
 | I-08 | Listing rooms while another room session was committing could truncate the in-flight history line and corrupt the room. | `RoomStore.load()` "repaired" trailing bytes. | Loading is read-only; repair happens at the next append via the committed byte length; open rooms are listed from their live session; one retry if an epoch switch races a read. | `concurrentListingDuringCommitsNeverCorruptsHistory` |
 | I-09 | For the few ms of a write, the state already showed the new edit with no pending flag, so the UI could say "Saved" before bytes were durable. | Attempted state published before the write without a marker. | `writing` flag; `saved` requires no failed and no in-progress write; Undo/Redo wait for it. | PersistenceTest, EditorUiTest |
+| I-10 | Typing one real wall length tilted the next wall (rectangle → trapezoid); `11 6 1/4` was rejected; a typed edit could push corners off-screen. | Far-corner-only length rule; strict parser; fixed view. | E-006, E-008, E-009. | BuilderUxTest, persona UI test |
 | I-07 | Text fields inside `AlertDialog` never reach idle under Robolectric. | Test-environment behaviour (dialogs without text fields work). | Room naming and rename are inline (no modal), which also suits the brief. | EditorUiTest |
 
 Environment notes: Maven Central HTTP 429 through shared egress (E-001, mirror added); no `/dev/kvm`, so no

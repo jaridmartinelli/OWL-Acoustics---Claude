@@ -68,14 +68,18 @@ object LengthParser {
         var total = Rational.ZERO
         var lastUnit: LengthUnit? = null
         var firstUnit: LengthUnit? = null
-        val units = tokens.map { it.second }
+        // Tape-measure shorthand in feet mode: "11 6 1/4" means 11 ft 6 1/4 in.
+        val toks = if (defaultUnit == LengthUnit.FOOT && tokens.size == 2 && tokens.all { it.second == null }) {
+            listOf(tokens[0].first to LengthUnit.FOOT, tokens[1].first to LengthUnit.INCH)
+        } else tokens
+        val units = toks.map { it.second }
         if (units.count { it == null } > 1) return ParseResult.Invalid("Add units, for example 12 ft 3 in")
-        for ((i, tok) in tokens.withIndex()) {
+        for ((i, tok) in toks.withIndex()) {
             val (value, u0) = tok
             val u = u0 ?: when {
                 // "12' 3" → trailing bare number after feet is inches
                 i > 0 && lastUnit == LengthUnit.FOOT -> LengthUnit.INCH
-                tokens.size == 1 -> defaultUnit
+                toks.size == 1 -> defaultUnit
                 else -> return ParseResult.Invalid("Add units, for example 12 ft 3 in")
             }
             if (lastUnit != null) {
@@ -162,6 +166,16 @@ object LengthFormat {
             append('"')
         }
         return if (feet > 0) "$sign$feet' $inchPart" else "$sign$inchPart"
+    }
+
+    /** Live interpretation shown while typing, e.g. "= 11' 6 1/4\" (3.512 m)". Null for blank input. */
+    fun interpretation(text: String, units: DisplayUnits): String? {
+        val def = if (units == DisplayUnits.IMPERIAL) LengthUnit.FOOT else LengthUnit.METER
+        return when (val r = LengthParser.parse(text, def)) {
+            is ParseResult.Ok -> "= " + formatFeetInches(r.value.meters) + "  (" + String.format(java.util.Locale.US, "%.3f m", r.value.meters) + ")"
+            is ParseResult.Invalid -> r.reason
+            ParseResult.Unknown -> null
+        }
     }
 
     /** Formats an entered value from its exact representation in its own unit, without re-rounding drift. */

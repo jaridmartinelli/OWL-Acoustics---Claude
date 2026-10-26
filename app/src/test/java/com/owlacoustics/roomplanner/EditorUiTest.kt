@@ -8,6 +8,7 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
@@ -92,22 +93,24 @@ class EditorUiTest {
 
     @Test fun inlineMeasurementCornerDragUndoRedoAndRecreate() {
         createManualRoom("Studio A")
-        rule.onNodeWithText("Area 120.0 ft²").assertExists()
+        rule.onNodeWithText("Area 120.0 ft²", substring = true).assertExists()
         var m = model()
-        val t = fit(m)
+        var t = fit(m)
         // tap the first wall's length label on the canvas and type an exact fraction inline
         val w0 = m.walls[0]
         val label = t.toScreen(w0.pointAt(w0.length / 2) + w0.outward * t.pixelsToMeters(px(com.owlacoustics.roomplanner.ui.plan.WALL_LABEL_OFFSET_DP)))
         canvas().performTouchInput { click(label) }
         rule.onNodeWithTag("inline-measure").assertExists().performTextReplacement("14' 1/2\"")
-        rule.onNodeWithTag("inline-measure").performImeAction()
+        rule.onNodeWithText("OK").performClick()
         waitFor { abs(model().walls[0].length - (14 * 0.3048 + 0.5 * 0.0254)) < 1e-12 }
         assertEquals("14' 1/2\"", model().entries["wall:${w0.id}:length"]!!.text)
         rule.onNodeWithText("Wall 1: 14' 1/2\"").assertExists()
         val stepsBefore = state().history.entries.size
 
         // drag a corner: one gesture = one meaningful history step
+        rule.onNodeWithText("Fit").performClick(); rule.waitForIdle()
         m = model()
+        t = fit(m)
         val v = m.vertices[2]
         val start = t.toScreen(v.pos)
         canvas().performTouchInput { swipe(start, start + Offset(px(60f), 0f), 400) }
@@ -132,6 +135,50 @@ class EditorUiTest {
         val r = RoomStore(container.store.root).load(state().roomId) as LoadResult.Ok
         assertEquals(state().history.cursor, r.history.cursor)
         assertEquals(state().history.entries.map { it.label }, r.history.entries.map { it.label })
+    }
+
+    private fun typeInto(tag: String, text: String) {
+        val field = rule.onNode(hasSetTextAction() and hasAnyAncestor(hasTestTag(tag)))
+        field.performClick()
+        field.performTextReplacement(text)
+        field.performImeAction()
+    }
+
+    /** Persona: a musician types two tape measurements, 15' 1/8" by 11' 6 1/4", into the manual builder. */
+    @Test fun personaTypesTwoTapeMeasurementsAndRoomStaysSquare() {
+        createManualRoom("Home studio")
+        typeInto("room-length", "15' 1/8\"")
+        waitFor { abs(model().walls[0].length - (180.125 * 0.0254)) < 1e-12 }
+        typeInto("room-width", "11 6 1/4")
+        waitFor { abs(model().walls[1].length - (138.25 * 0.0254)) < 1e-12 }
+        val m = model()
+        assertTrue(com.owlacoustics.domain.edit.Edits.isRectangle(m))
+        assertEquals(m.walls[0].length, m.walls[2].length, 1e-12)
+        assertEquals(m.walls[1].length, m.walls[3].length, 1e-12)
+        rule.onNodeWithText("Wall 3: 15' 0 1/8\"").assertExists()
+        rule.onNodeWithText("Wall 4: 11' 6 1/4\"").assertExists()
+
+        // a near-miss corner drag snaps back to the exact square corner: no 90.1° walls
+        val t = fit(m)
+        val steps = state().history.entries.size
+        val c = t.toScreen(m.vertices[2].pos)
+        canvas().performTouchInput { swipe(c, c + Offset(px(12f), px(-6f)), 300) }
+        rule.waitForIdle(); Thread.sleep(300); rule.waitForIdle()
+        assertTrue(com.owlacoustics.domain.edit.Edits.isRectangle(model()))
+        assertEquals(steps, state().history.entries.size)
+
+        // walk-around entry: tap a wall length on the plan, type, Next opens the following wall
+        rule.onNodeWithText("Fit").performClick(); rule.waitForIdle()
+        val t2 = fit(model())
+        val w0 = model().walls[0]
+        val label = t2.toScreen(w0.pointAt(w0.length / 2) + w0.outward * t2.pixelsToMeters(px(com.owlacoustics.roomplanner.ui.plan.WALL_LABEL_OFFSET_DP)))
+        canvas().performTouchInput { click(label) }
+        rule.onNodeWithTag("inline-measure").performTextReplacement("15 0 1/8")
+        rule.onNodeWithTag("inline-hint").assertExists()
+        rule.onNodeWithText("= 15' 0 1/8\"  (4.575 m)").assertExists()
+        rule.onNodeWithText("Next wall →").performClick()
+        waitFor { (rule.onAllNodesWithTag("inline-measure").fetchSemanticsNodes().isNotEmpty()) && rule.onAllNodesWithText("Wall 2 ·", substring = true, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+        assertTrue(com.owlacoustics.domain.edit.Edits.isRectangle(model()))
     }
 
     @Test fun selectFirstWallActionsWindowHybridAndDoorRotation() {

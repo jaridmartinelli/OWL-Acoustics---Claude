@@ -69,11 +69,13 @@ fun LengthField(
         }
     }
     Column(modifier) {
+        val hint = if (focused && text != shown) LengthFormat.interpretation(text, units) else null
         OutlinedTextField(
             value = text,
             onValueChange = { text = it },
             label = { Text(label) },
-            placeholder = { Text(if (allowUnknown) "unknown" else "") },
+            placeholder = { Text(if (allowUnknown) "unknown" else if (units == DisplayUnits.IMPERIAL) "e.g. 11 6 1/4" else "e.g. 3.51 m") },
+            supportingText = hint?.let { h -> { Text(h) } },
             singleLine = true,
             isError = error != null,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),

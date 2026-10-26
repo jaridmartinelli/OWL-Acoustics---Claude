@@ -73,3 +73,14 @@ material owner decision.
   canvas so they never cover geometry (I-05). Wall length labels are drawn 32 dp outside the wall (I-06).
 - E-005 (2026-10-26) Startup media revalidation deletes unregistered media bytes (interrupted recordings) and marks
   registered media with missing bytes as unavailable.
+- E-006 (2026-10-26) **Supersedes the D-05 default behaviour for exact wall lengths** (engineering default, reversible;
+  the start corner is still anchored): typed lengths now default to *Keep corners square*, which slides the next
+  wall along the edited wall's direction so every corner angle is preserved. The original "move the far corner only"
+  remains available via a toggle. Reason: persona walk-through and review research (docs/BUILDER_UX_RESEARCH.md)
+  showed the far-corner rule turns a rectangle into a trapezoid as soon as one real measurement is typed.
+- E-007 (2026-10-26) Drag snapping engine (`domain/edit/Snap.kt`): room-axis angles in 45° steps with 4° tolerance,
+  exact corner when both arms lock, ½" / 1 cm length steps for drags only, corner alignment, 14 dp screen tolerance,
+  haptic tick on engagement. Typed values bypass snapping. Tuning still needs device verification.
+- E-008 (2026-10-26) In feet mode, two bare numbers mean feet then inches (`11 6 1/4` = 11' 6 1/4"); metric mode
+  still refuses ambiguous bare pairs. Inputs show a live interpretation before committing.
+- E-009 (2026-10-26) After a typed (non-drag) edit, the plan view refits if any corner leaves the visible canvas.

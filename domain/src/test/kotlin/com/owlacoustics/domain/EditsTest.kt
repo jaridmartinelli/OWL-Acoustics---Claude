@@ -49,7 +49,7 @@ class EditsTest {
 
     @Test fun setWallLengthAnchorsStartCorner() {
         val m = rect(4.0, 3.0)
-        val n = ok(Edits.setWallLength(m, "w0", ev("5 m")))
+        val n = ok(Edits.setWallLength(m, "w0", ev("5 m"), Edits.LengthMode.FAR_CORNER))
         assertNear(0.0, n.vertices[0].x)
         assertNear(5.0, n.vertices[1].x)
         assertNear(5.0, n.wallAt(0).length)

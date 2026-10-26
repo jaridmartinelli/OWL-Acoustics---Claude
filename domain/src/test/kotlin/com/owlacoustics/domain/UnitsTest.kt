@@ -44,7 +44,9 @@ class UnitsTest {
         assertTrue(LengthParser.parse("Infinity", LengthUnit.FOOT) is ParseResult.Invalid)
         assertTrue(LengthParser.parse("abc", LengthUnit.FOOT) is ParseResult.Invalid)
         assertTrue(LengthParser.parse("3 in 2 ft", LengthUnit.FOOT) is ParseResult.Invalid)
-        assertTrue(LengthParser.parse("3 4", LengthUnit.FOOT) is ParseResult.Invalid)
+        assertTrue(LengthParser.parse("3 4", LengthUnit.METER) is ParseResult.Invalid)
+        assertTrue(LengthParser.parse("3 4 5", LengthUnit.FOOT) is ParseResult.Invalid)
+        assertEquals(Rational.of(40) * Rational.of(254, 10000), meters("3 4")) // tape shorthand: 3 ft 4 in
         assertTrue(LengthParser.parse("1.5 1/2 in", LengthUnit.FOOT) is ParseResult.Invalid)
         // zero is a real value (valid for offsets), distinct from unknown
         val z = LengthParser.parse("0", LengthUnit.FOOT)

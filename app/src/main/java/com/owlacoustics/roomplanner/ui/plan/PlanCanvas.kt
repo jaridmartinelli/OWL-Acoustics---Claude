@@ -60,7 +60,7 @@ sealed interface Target {
     data object Background : Target
 }
 
-data class Guide(val a: Vec2, val b: Vec2)
+data class Guide(val a: Vec2, val b: Vec2, val strong: Boolean = false)
 
 /** Wall length labels sit outside the wall, clear of the opening touch band. */
 const val WALL_LABEL_OFFSET_DP = 32f
@@ -211,7 +211,14 @@ fun PlanCanvas(
         backdrop?.invoke(this, tr)
         drawGrid(tr, m)
         drawRoom(m, tr, s, boundaryHit, handleR, tm, labelOff)
-        for (g in guides) drawLine(Color(0xFF1F7A72), tr.toScreen(g.a), tr.toScreen(g.b), 2f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f)))
+        for (g in guides) {
+            // extend guides past the corner so the alignment reads at a glance
+            val a = tr.toScreen(g.a); val b = tr.toScreen(g.b)
+            val d = b - a; val len = d.getDistance()
+            val ext = if (len > 1f) d / len * 60f else Offset.Zero
+            drawLine(if (g.strong) Color(0xFF1F7A72) else Color(0xAA1F7A72), a - ext, b + ext, if (g.strong) 3f else 2f,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f)))
+        }
         if (showSetup) drawSetup(m, tr, tm)
     }
 }
@@ -276,10 +283,36 @@ private fun DrawScope.drawRoom(m: RoomModel, t: ViewTransform, sel: Sel, boundar
         drawCircle(if (selected) SelectAmber else Color.White, handleR * 0.42f, p)
         drawCircle(WallColor, handleR * 0.42f, p, style = Stroke(if (v.locked) 6f else 3f))
     }
+    drawCornerMarks(m, t, sel, tm)
     val style = TextStyle(fontSize = 13.sp, color = WallColor, fontWeight = FontWeight.Medium, background = Color(0xDDFFFFFF))
     for (l in labelSpots(m, t, sel, labelOff)) {
         val layout = tm.measure(l.text, style)
         drawText(layout, topLeft = l.at - Offset(layout.size.width / 2f, layout.size.height / 2f))
+    }
+}
+
+/** Square glyph at exact right angles; a degree label at other corners (and at the selected corner). */
+private fun DrawScope.drawCornerMarks(m: RoomModel, t: ViewTransform, sel: Sel, tm: TextMeasurer) {
+    val n = m.vertices.size
+    val style = TextStyle(fontSize = 11.sp, color = Color(0xFF5B3FA0), background = Color(0xDDFFFFFF))
+    for (i in 0 until n) {
+        val ang = com.owlacoustics.domain.edit.Edits.interiorAngle(m, i)
+        val v = m.vertices[i].pos
+        val a = m.vertices[(i + n - 1) % n].pos; val b = m.vertices[(i + 1) % n].pos
+        val ua = (a - v).normalized(); val ub = (b - v).normalized()
+        val k = t.pixelsToMeters(14f)
+        val square = abs(ang - 90.0) < 0.05 || abs(ang - 270.0) < 0.05
+        if (square && ang < 180) {
+            val p1 = t.toScreen(v + ua * k); val p2 = t.toScreen(v + ua * k + ub * k); val p3 = t.toScreen(v + ub * k)
+            drawLine(Color(0xFF5B3FA0), p1, p2, 2f); drawLine(Color(0xFF5B3FA0), p2, p3, 2f)
+        }
+        if (!square || sel == Sel.Vertex(m.vertices[i].id)) {
+            val bis = (ua + ub).normalized().let { if (it.length < 0.5) ua.perp() else it }
+            val inside = if (ang > 180) -bis else bis
+            val at = t.toScreen(v + inside * t.pixelsToMeters(30f))
+            val layout = tm.measure("%.1f°".format(ang), style)
+            drawText(layout, topLeft = at - Offset(layout.size.width / 2f, layout.size.height / 2f))
+        }
     }
 }
 

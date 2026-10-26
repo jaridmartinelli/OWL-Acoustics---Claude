@@ -121,18 +121,73 @@ object Edits {
         return finish(m, m.copy(vertices = nv), "Move wall")
     }
 
-    /** D-05: anchor the start corner and move the far corner along the wall direction. */
-    fun setWallLength(m: RoomModel, wallId: String, entered: EnteredValue): EditResult {
+    /**
+     * How an exact wall length is applied (E-006). Both keep the wall's start corner fixed.
+     * KEEP_ANGLES pushes the next wall along this wall's direction, so every corner angle stays the same
+     * (a rectangle stays a rectangle). FAR_CORNER moves only the far corner (the original D-05 behaviour).
+     */
+    enum class LengthMode { KEEP_ANGLES, FAR_CORNER }
+
+    fun setWallLength(m: RoomModel, wallId: String, entered: EnteredValue, mode: LengthMode = LengthMode.KEEP_ANGLES): EditResult {
         val len = entered.meters
         if (!len.isFinite() || len < MIN_EDGE) return EditResult.Rejected("Wall length must be positive.")
         val w = m.wall(wallId) ?: return EditResult.Rejected("Wall not found.")
         if (w.end.locked) return EditResult.Rejected("The far corner of this wall is locked.")
+        val n = m.vertices.size
         val to = w.a + w.dir * len
+        val shift = to - w.b
         val nv = m.vertices.toMutableList()
-        val j = (w.index + 1) % m.vertices.size
+        val j = (w.index + 1) % n
         nv[j] = w.end.copy(x = to.x, y = to.y, provenance = Provenance.USER_ENTERED)
+        if (mode == LengthMode.KEEP_ANGLES) {
+            val k = (w.index + 2) % n
+            val next = m.wallAt(j)
+            // a straight continuation (180°) has no corner to preserve; only push a real corner
+            val collinear = abs(w.dir cross next.dir) < 1e-9
+            if (k != w.index && !collinear) {
+                val v = m.vertices[k]
+                if (v.locked) return EditResult.Rejected("Keeping the corners square would move a locked corner. Unlock it, or choose \"Move far corner only\".")
+                nv[k] = markEdited(v).copy(x = v.x + shift.x, y = v.y + shift.y)
+            }
+        }
         val cand = m.copy(vertices = nv, entries = m.entries + ("wall:$wallId:length" to entered))
         return finish(m, cand, "Set wall length")
+    }
+
+    /** True when the outline is a rectangle (4 corners, all 90° within 0.01°). */
+    fun isRectangle(m: RoomModel) = m.vertices.size == 4 && Polygons.isRightAngled(m.outline, 0.01)
+
+    /**
+     * Makes the corner at [vertexId] exactly 90° by sliding it along its incoming wall's line
+     * (the incoming wall keeps its direction; both attached walls change length).
+     */
+    fun squareCorner(m: RoomModel, vertexId: String): EditResult {
+        val n = m.vertices.size
+        val i = m.vertices.indexOfFirst { it.id == vertexId }
+        if (i < 0) return EditResult.Rejected("Corner not found.")
+        val v = m.vertices[i]
+        if (v.locked) return EditResult.Rejected("This corner is locked.")
+        val a = m.vertices[(i + n - 1) % n].pos; val b = m.vertices[(i + 1) % n].pos
+        val d = (v.pos - a).normalized()
+        if (d.length < 0.5) return EditResult.Rejected("Corner not found.")
+        // foot of the perpendicular from b onto line a + t·d
+        val foot = a + d * ((b - a) dot d)
+        if (foot.distanceTo(a) < MIN_EDGE || foot.distanceTo(b) < MIN_EDGE) return EditResult.Rejected("This corner cannot be squared without collapsing a wall.")
+        val nv = m.vertices.toMutableList()
+        nv[i] = markEdited(v).copy(x = foot.x, y = foot.y)
+        return finish(m, m.copy(vertices = nv), "Square corner")
+    }
+
+    /** Interior angle at vertex i in degrees (CCW outline). */
+    fun interiorAngle(m: RoomModel, i: Int): Double {
+        val n = m.vertices.size
+        val a = m.vertices[(i + n - 1) % n].pos; val v = m.vertices[i].pos; val b = m.vertices[(i + 1) % n].pos
+        val u = (a - v); val w = (b - v)
+        var ang = Math.toDegrees(kotlin.math.atan2(u cross w, u dot w))
+        // CCW polygon: interior is measured from next edge back to previous edge
+        ang = -ang
+        if (ang < 0) ang += 360.0
+        return ang
     }
 
     /** Rotates the wall about its start corner to the absolute bearing (degrees CCW from +x). */
