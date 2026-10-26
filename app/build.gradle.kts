@@ -38,6 +38,11 @@ android {
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true
+        unitTests.all {
+            // Robolectric downloads android-all through the same Maven Central mirror as Gradle (E-001)
+            it.systemProperty("robolectric.dependency.repo.url", "https://maven-central.storage-download.googleapis.com/maven2")
+            it.maxHeapSize = "3g"
+        }
     }
     lint {
         abortOnError = true

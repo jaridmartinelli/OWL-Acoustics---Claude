@@ -76,6 +76,16 @@ class RoomSession private constructor(
         commitLocked(s.durable, s.durable.push(edit.model, edit.label, clock()))
     }
 
+    /** Evaluates [f] against the latest durable model under the room lock, so rapid edits never overwrite each other. */
+    suspend fun edit(f: (RoomModel) -> EditResult): Pair<EditResult, SaveOutcome?> = mutex.withLock {
+        val s = _state.value
+        if (s.closed) return EditResult.Rejected("Room is closed.") to null
+        if (s.unsaved != null) return EditResult.Rejected("Save or discard the unsaved change first.") to null
+        val r = f(s.durable.current)
+        if (r !is EditResult.Ok) return r to null
+        r to commitLocked(s.durable, s.durable.push(r.model, r.label, clock()))
+    }
+
     suspend fun undo(): SaveOutcome = mutex.withLock {
         val s = _state.value
         if (s.closed || s.unsaved != null || !s.durable.canUndo) return SaveOutcome.Blocked("Nothing to undo.")
