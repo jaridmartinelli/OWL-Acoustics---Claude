@@ -88,3 +88,7 @@ material owner decision.
   non-scrolling step bar (replacing the scrolling tab strip), a fixed plan toolbar with overflow menu, a canvas that
   takes the remaining height, wrapping (not scrolling) contextual panels and a one-wall-at-a-time wall pager. Verified by
   a rendered test at 360 × 640 dp that finds no scrollable node. Research basis revised to mobile-only store reviews.
+- E-011 (2026-10-27) **Owner request:** a test app to compare camera capture methods. Added `:lab` (separate app ID
+  `com.owlacoustics.capturelab.dev`) with methods 1, 2 (model-free floor-line variant), 4, 5, 6 and 7 plus a
+  tape-measure scorecard; method 3 paused by owner. Depth model: Depth Anything V2 Small int8 ONNX (Apache-2.0),
+  downloaded at build time with checksum. arm64-v8a only. Portrait lock is intentional (tilt maths assumes upright).

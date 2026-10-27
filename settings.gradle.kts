@@ -17,4 +17,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "OWLAcoustics"
-include(":domain", ":app")
+include(":domain", ":app", ":lab")
