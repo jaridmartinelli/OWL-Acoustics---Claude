@@ -229,6 +229,8 @@ data class TraceHistory(val past: List<TraceDoc> = emptyList(), val present: Tra
 object TraceAssembler {
     /** Joins that turn by less than this are treated as one straight wall (unless the point was placed by hand). */
     const val STRAIGHT_DEG = 7.0
+    private const val NEAR_M = 0.25
+    private const val OFFSET_M = 0.03
 
     /**
      * @param corners new corners in drawing order (leave out the first when the stroke continued from the last point,
@@ -262,7 +264,13 @@ object TraceAssembler {
         val u = (p - a).normalized(); val v = (c - p).normalized()
         if (u.length < 0.5 || v.length < 0.5) return doc
         val turn = Math.toDegrees(kotlin.math.abs(kotlin.math.atan2(u cross v, u dot v)))
-        if (turn > STRAIGHT_DEG) return doc
+        // straight by angle, or (for a point very close to a neighbour, where the angle is noise) by its offset from the line
+        val line = (c - a).normalized()
+        val along = (p - a) dot line
+        val offset = kotlin.math.abs((p - a) cross line)
+        val near = minOf(p.distanceTo(a), p.distanceTo(c)) < NEAR_M
+        val straight = turn <= STRAIGHT_DEG || (near && offset <= OFFSET_M && along > 0 && along < a.distanceTo(c))
+        if (!straight) return doc
         // the merged line is only as trustworthy as its weaker half
         val intoThis = corners[k].snapped
         val closingIntoNext = b.closed && k == n - 1

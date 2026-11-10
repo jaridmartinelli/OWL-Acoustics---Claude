@@ -36,8 +36,8 @@ android {
         applicationId = "com.owlacoustics.capturelab.dev"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0-lab"
+        versionCode = 2
+        versionName = "0.2.0-lab"
         // 64-bit ARM phones only (OnePlus Open is arm64); keeps the depth engine's native code from bloating the APK
         ndk { abiFilters += "arm64-v8a" }
     }
@@ -48,6 +48,15 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures { compose = true }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        unitTests.all {
+            // Robolectric downloads android-all through the same Maven Central mirror as Gradle (E-001)
+            it.systemProperty("robolectric.dependency.repo.url", "https://maven-central.storage-download.googleapis.com/maven2")
+            it.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
+            it.maxHeapSize = "3g"
+        }
+    }
     lint { abortOnError = true }
 }
 
@@ -72,4 +81,10 @@ dependencies {
     implementation(libs.arcore)
     implementation(libs.onnxruntime.android)
     implementation(libs.kotlinx.coroutines.android)
+    debugImplementation(libs.compose.ui.test.manifest)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
 }

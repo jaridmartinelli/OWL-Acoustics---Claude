@@ -255,6 +255,23 @@ class TraceSolverTest {
         assertTrue("no walls before the scale is known", TraceMeshBuilder.build(open, so, set, true).wallLines.isEmpty())
     }
 
+    @Test fun trackedCameraPositionsReplaceThePivotAssumption() {
+        // a walking user: each corner seen from a different place and height, positions supplied by a tracker
+        val room = SyntheticRoom.persona(ceiling = 8 * FT, camHeight = 0.0, pivot = 0.0)
+        val rnd = Random(9)
+        val floorZ = -1.37 // tracker origin is 1.37 m above the floor
+        fun see(p: Vec2, z: Double): NewCorner {
+            val cam = Vec3(p.x * 0.3 + rnd.nextDouble() - 0.5, p.y * 0.3 + rnd.nextDouble() - 0.5, rnd.nextDouble() * 0.2 - 0.1)
+            return NewCorner((Vec3(p.x, p.y, z) - cam).normalized(), Vec2(1.0, 0.0), tracked = cam)
+        }
+        var d = TraceEdits.append(TraceDoc(), Surface.FLOOR, room.poly.map { see(it, floorZ) }, close = true)
+        d = TraceEdits.append(d, Surface.CEILING, room.poly.take(2).map { see(it, floorZ + 8 * FT) })
+        val sol = TraceSolver.solve(d, set.copy(pivotRadiusM = 0.6)) // pivot setting must not matter here
+        assertEquals(ScaleBasis.CEILING_DEFAULT, sol.basis)
+        assertEquals(floorZ, sol.floorZ, 2e-3)
+        assertTrue(maxAbsDiff(planLengths(sol), room.lengths) < 3e-3)
+    }
+
     /** Simulated tracing error (not a device measurement): how far walls land from the truth. */
     @Test fun simulatedTracingErrorStaysInsideSixInchesAfterOneTypedWall() {
         val rnd = Random(2026)

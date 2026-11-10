@@ -241,6 +241,14 @@ class TraceController(private val drafts: TraceDraftStore?) {
     fun restart() { cancelStroke(); selected = null; editing = null; commit(TraceEdits.restart(history.present)) }
     fun clearMessage() { message = null }
 
+    /** Back button: closes the size editor, then the selection, then the frozen view. False when nothing was open. */
+    fun back(): Boolean = when {
+        editing != null -> { editing = null; true }
+        selected != null -> { selected = null; true }
+        frozen != null -> { resume(); true }
+        else -> false
+    }
+
     private val boundary get() = history.present.boundary(surface)
     private fun solvedPos(id: Int): Vec3? = solution.points(surface).firstOrNull { it.id == id }?.pos
 
@@ -393,6 +401,16 @@ class TraceController(private val drafts: TraceDraftStore?) {
         return true
     }
 
+    /**
+     * Dragging from the end point of an open boundary continues the line, as a lasso does. To move that point
+     * instead, tap it first so it is selected.
+     */
+    fun dragContinuesLine(h: Hit): Boolean {
+        if (h !is Hit.Anchor) return true
+        val b = boundary
+        return !b.closed && b.corners.lastOrNull()?.id == h.id && selected != h.id
+    }
+
     fun beginDrag(h: Hit.Anchor) {
         freezeForEdit()
         dragId = h.id; selected = h.id; editing = null
@@ -445,7 +463,12 @@ class TraceController(private val drafts: TraceDraftStore?) {
             is Hit.Delete -> delete(h.id)
             is Hit.Label -> { selected = null; editing = EditTarget.Segment(h.seg.surface, h.seg.a, h.seg.b) }
             is Hit.Anchor -> {
-                if (lastTapId == h.id && atMs - lastTapAt < 350) { delete(h.id); lastTapId = null }
+                val b = boundary
+                if (!b.closed && b.corners.size >= 3 && b.corners.first().id == h.id && selected == null) {
+                    // like a lasso: touching the first point finishes the loop
+                    commit(TraceAssembler.addStroke(history.present, surface, emptyList(), true, false, settings.solver)); buzz(Buzz.CLOSE)
+                }
+                else if (lastTapId == h.id && atMs - lastTapAt < 350) { delete(h.id); lastTapId = null }
                 else { selected = if (selected == h.id) null else h.id; editing = null; lastTapId = h.id; lastTapAt = atMs }
             }
             is Hit.Line -> {
@@ -597,11 +620,11 @@ class TraceController(private val drafts: TraceDraftStore?) {
             stroke != null -> if (strokeFit?.segmentSnapped?.lastOrNull() == false) "No clear edge here: following your finger" else "Following the edge"
             b.anchors.isEmpty() && frozen == null -> "Aim at $edge, then trace along it with your finger"
             b.anchors.isEmpty() -> "Trace along $edge"
-            frozen != null && !b.closed -> "Trace on from the last point, or tap Resume and turn"
-            frozen != null -> "Drag a point to adjust · pinch to zoom · Resume to turn"
+!b.closed && frozen != null -> "Trace on from the last point, or tap Resume and turn"
             !b.closed -> "Turn to the next part and keep tracing the $name" + (if (b.corners.size >= 3) " · end on the first point to close" else "")
             surface == Surface.FLOOR && history.present.ceiling.anchors.isEmpty() -> "Floor closed. Switch to Ceiling and trace a ceiling line to set the scale"
-            !solution.calibrated -> "Tap a wall's size and type what your tape says"
+            !solution.calibrated -> "Tap the longest wall's size and type what your tape says"
+            frozen != null -> "Drag a point to adjust · pinch to zoom · Resume to turn"
             else -> "Check the sizes, then Save"
         }
     }

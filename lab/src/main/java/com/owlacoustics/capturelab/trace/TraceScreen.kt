@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,8 +33,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -52,7 +54,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -171,13 +177,29 @@ fun TraceContent(c: TraceController, feed: TraceFeed, onClose: () -> Unit, onSav
         }
     }
     LaunchedEffect(c.message) { if (c.message != null) { kotlinx.coroutines.delay(3500); c.clearMessage() } }
+    // Back peels one layer at a time before leaving the screen
+    BackHandler {
+        when {
+            confirmRestart -> confirmRestart = false
+            showSettings -> showSettings = false
+            !c.back() -> onClose()
+        }
+    }
 
     BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
         val screenH = with(density) { maxHeight.toPx() }
         Column(Modifier.fillMaxSize()) {
             TopBar(c, onClose = onClose, onSettings = { showSettings = true })
-            Viewport(c, screenH)
-            InfoRow(c, Modifier.weight(1f))
+            // the picture is as large as fits; on a short phone it gives up width before the controls give up height
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                val vw = minOf(maxWidth, maxHeight * 0.75f)
+                val spare = maxHeight - vw / 0.75f
+                Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    // with room below the picture the Freeze button sits there; otherwise in the picture's corner
+                    Viewport(c, screenH, Modifier.size(vw, vw / 0.75f), freezeInside = spare < 60.dp)
+                    if (spare >= 60.dp) InfoRow(c, Modifier.height(spare))
+                }
+            }
             BottomBar(c, onRestart = { confirmRestart = true }, onSave = onSave)
         }
         if (showSettings) SettingsPanel(c) { showSettings = false }
@@ -191,23 +213,26 @@ fun TraceContent(c: TraceController, feed: TraceFeed, onClose: () -> Unit, onSav
 private fun TopBar(c: TraceController, onClose: () -> Unit, onSettings: () -> Unit) {
     Column(Modifier.fillMaxWidth().background(Panel).padding(horizontal = 8.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            RoundButton("⋮", "Test switches", "trace-settings", onClick = onSettings)
+            RoundButton(Glyph.MORE, "Test switches", "trace-settings", onClick = onSettings)
             Text(c.coach(), color = OnPanel, fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp)).background(PanelHi).padding(horizontal = 12.dp, vertical = 7.dp).testTag("trace-coach"))
-            RoundButton("✕", "Close", "trace-close", onClick = onClose)
+            RoundButton(Glyph.CLOSE, "Close", "trace-close", onClick = onClose)
         }
         val warn = c.scaleWarning
-        Text(c.scaleTag() + "  ✎", color = if (warn) TraceColors.ink else OnPanel, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.clip(RoundedCornerShape(12.dp)).background(if (warn) TraceColors.warn else PanelHi)
-                .clickable { c.editCeiling() }.padding(horizontal = 10.dp, vertical = 4.dp).testTag("trace-scale").semantics { contentDescription = "Scale and ceiling height. Tap to type the ceiling height." })
+        Row(Modifier.clip(RoundedCornerShape(14.dp)).background(if (warn) TraceColors.warn else PanelHi).clickable { c.editCeiling() }
+            .heightIn(min = 30.dp).padding(horizontal = 10.dp, vertical = 5.dp).testTag("trace-scale").semantics(mergeDescendants = true) { contentDescription = "Tap to type the ceiling height" },
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(c.scaleTag(), color = if (warn) TraceColors.ink else OnPanel, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+            GlyphIcon(Glyph.EDIT, if (warn) TraceColors.ink else OnPanel, Modifier.size(14.dp))
+        }
     }
 }
 
 @Composable
-private fun Viewport(c: TraceController, screenH: Float) {
+private fun Viewport(c: TraceController, screenH: Float, modifier: Modifier, freezeInside: Boolean) {
     val tm = rememberTextMeasurer()
     var topInRoot by remember { mutableStateOf(0f) }
-    Box(Modifier.fillMaxWidth().aspectRatio(3f / 4f).onGloballyPositioned { topInRoot = it.positionInRoot().y }) {
+    Box(modifier.onGloballyPositioned { topInRoot = it.positionInRoot().y }) {
         Canvas(Modifier.fillMaxSize().testTag("trace-canvas").semantics { contentDescription = c.describe() }
             .onSizeChanged { c.canvasW = it.width.toFloat(); c.canvasH = it.height.toFloat() }
             .pointerInput(Unit) {
@@ -228,7 +253,7 @@ private fun Viewport(c: TraceController, screenH: Float) {
                         } else if (pressed.size == 1 && mode != Mode.TWO) {
                             val ch = pressed[0]
                             if (mode == Mode.PENDING && (ch.position - down.position).getDistance() > viewConfiguration.touchSlop) {
-                                mode = if (hit is Hit.Anchor) { c.beginDrag(hit); Mode.DRAG }
+                                mode = if (hit is Hit.Anchor && !c.dragContinuesLine(hit)) { c.beginDrag(hit); Mode.DRAG }
                                     else if (c.beginStroke(down.position)) Mode.STROKE else Mode.TWO
                             }
                             if (mode == Mode.STROKE) c.moveStroke(ch.position) else if (mode == Mode.DRAG) c.drag(ch.position)
@@ -246,18 +271,26 @@ private fun Viewport(c: TraceController, screenH: Float) {
                 }
             }) { drawTrace(c, tm) }
 
-        // Freeze / Resume
         val frozen = c.frozen != null
-        if (c.settings.freeze != FreezeMode.OFF || frozen) {
-            Text(if (frozen) "▶  Resume camera" else "❚❚  Freeze", color = if (frozen) TraceColors.ink else OnPanel, fontSize = 15.sp, fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp).clip(RoundedCornerShape(24.dp))
-                    .background(if (frozen) Color.White else Color(0xD912181C)).clickable { if (frozen) c.resume() else c.freeze() }
-                    .heightIn(min = 44.dp).padding(horizontal = 18.dp, vertical = 12.dp).testTag("trace-freeze"))
-        }
+        if (freezeInside) FreezeButton(c, compact = true, modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp))
         if (frozen && c.zoom > 1.01f) Text("%.1f×".format(c.zoom), color = OnPanel, fontSize = 12.sp,
             modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xD912181C)).padding(horizontal = 8.dp, vertical = 3.dp))
 
         c.editing?.let { target -> SizeEditor(c, target, topInRoot, screenH) }
+    }
+}
+
+@Composable
+private fun FreezeButton(c: TraceController, compact: Boolean, modifier: Modifier = Modifier) {
+    val frozen = c.frozen != null
+    if (c.settings.freeze == FreezeMode.OFF && !frozen) return
+    val fg = if (frozen) TraceColors.ink else OnPanel
+    Row(modifier.clip(RoundedCornerShape(26.dp)).background(if (frozen) Color.White else if (compact) Color(0xD912181C) else PanelHi)
+        .clickable { if (frozen) c.resume() else c.freeze() }.heightIn(min = 48.dp).padding(horizontal = if (compact) 16.dp else 18.dp, vertical = 12.dp)
+        .testTag("trace-freeze").semantics(mergeDescendants = true) { contentDescription = if (frozen) "Resume camera" else "Freeze picture" },
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
+        GlyphIcon(if (frozen) Glyph.PLAY else Glyph.PAUSE, fg, Modifier.size(16.dp))
+        if (!compact) Text(if (frozen) "Resume camera" else "Freeze", color = fg, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
 
@@ -279,7 +312,9 @@ private fun SizeEditor(c: TraceController, target: EditTarget, viewportTop: Floa
         .clip(RoundedCornerShape(12.dp)).background(Color.White).border(3.dp, color, RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(if (seg != null) "Length" else "Ceiling height", color = Color(0xFF51606A), fontSize = 11.sp, modifier = Modifier.weight(1f))
-            Text("✕", color = Color(0xFF51606A), fontSize = 15.sp, modifier = Modifier.clickable { c.cancelEdit() }.padding(horizontal = 6.dp).testTag("trace-edit-cancel"))
+            Box(Modifier.size(28.dp).clip(CircleShape).clickable { c.cancelEdit() }.testTag("trace-edit-cancel").semantics { contentDescription = "Cancel" }, contentAlignment = Alignment.Center) {
+                GlyphIcon(Glyph.CLOSE, Color(0xFF51606A), Modifier.size(14.dp))
+            }
         }
         BasicTextField(value, { value = it; error = null }, singleLine = true,
             textStyle = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = TraceColors.ink),
@@ -328,13 +363,17 @@ private fun InfoRow(c: TraceController, modifier: Modifier) {
                         drawText(l, topLeft = Offset((m.x - l.size.width / 2f).coerceIn(0f, size.width - l.size.width), (m.y - l.size.height / 2f).coerceIn(0f, size.height - l.size.height)))
                     }
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     val f = c.doc.floor; val ce = c.doc.ceiling
-                    Text("Floor: " + status(f.corners.size, f.closed), color = TraceColors.floor, fontSize = 12.sp)
-                    Text("Ceiling: " + status(ce.corners.size, ce.closed), color = TraceColors.ceiling, fontSize = 12.sp)
-                    val area = plan?.area
-                    if (area != null && c.sizesVisible) Text((if (c.solution.calibrated) "" else "~") + "%.0f sq ft".format(area / 0.09290304), color = OnPanel, fontSize = 12.sp)
-                    if (c.frame?.lensGuessed == true) Text("Lens data missing: sizes less reliable", color = TraceColors.warn, fontSize = 11.sp)
+                    if (side >= 104.dp) {
+                        Text("Floor: " + status(f.corners.size, f.closed), color = TraceColors.floor, fontSize = 12.sp, maxLines = 1)
+                        Text("Ceiling: " + status(ce.corners.size, ce.closed), color = TraceColors.ceiling, fontSize = 12.sp, maxLines = 1)
+                        val area = plan?.area
+                        if (c.frame?.lensGuessed == true) Text("Lens data missing: sizes less reliable", color = TraceColors.warn, fontSize = 11.sp, maxLines = 1)
+                        else if (area != null && c.sizesVisible) Text((if (c.solution.calibrated) "" else "~") + "%.0f sq ft".format(area / 0.09290304), color = OnPanel, fontSize = 12.sp)
+                        Spacer(Modifier.height(4.dp))
+                    }
+                    FreezeButton(c, compact = false, modifier = Modifier.fillMaxWidth())
                 }
             }
         }
@@ -349,33 +388,72 @@ private fun status(corners: Int, closed: Boolean) = when {
 
 @Composable
 private fun BottomBar(c: TraceController, onRestart: () -> Unit, onSave: () -> Unit) {
-    Row(Modifier.fillMaxWidth().background(Panel).padding(horizontal = 6.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween) {
-        RoundButton("↶", "Undo", "trace-undo", enabled = c.history.canUndo) { c.undo() }
-        RoundButton("↷", "Redo", "trace-redo", enabled = c.history.canRedo) { c.redo() }
-        Row(Modifier.clip(RoundedCornerShape(26.dp)).background(PanelHi).padding(3.dp)) {
-            for (s in listOf(Surface.FLOOR, Surface.CEILING)) {
-                val on = c.surface == s
-                val name = if (s == Surface.FLOOR) "Floor" else "Ceiling"
-                Text(name, color = if (on) TraceColors.ink else OnPanel, fontSize = 15.sp, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(RoundedCornerShape(23.dp)).background(if (on) TraceColors.of(s) else Color.Transparent)
-                        .clickable { c.pickSurface(s) }.heightIn(min = 46.dp).padding(horizontal = 14.dp, vertical = 13.dp)
-                        .testTag("trace-" + name.lowercase()).semantics { contentDescription = "$name boundary" + if (on) ", selected" else "" })
+    BoxWithConstraints(Modifier.fillMaxWidth().background(Panel)) {
+        // narrow phones get slightly smaller buttons so the row never wraps or scrolls
+        val tight = maxWidth < 380.dp
+        val round = if (tight) 46.dp else 52.dp
+        val pad = if (tight) 10.dp else 14.dp
+        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            RoundButton(Glyph.UNDO, "Undo", "trace-undo", enabled = c.history.canUndo, size = round) { c.undo() }
+            RoundButton(Glyph.REDO, "Redo", "trace-redo", enabled = c.history.canRedo, size = round) { c.redo() }
+            Row(Modifier.clip(RoundedCornerShape(26.dp)).background(PanelHi).padding(3.dp)) {
+                for (s in listOf(Surface.FLOOR, Surface.CEILING)) {
+                    val on = c.surface == s
+                    val name = if (s == Surface.FLOOR) "Floor" else "Ceiling"
+                    Text(name, color = if (on) TraceColors.ink else OnPanel, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false,
+                        modifier = Modifier.clip(RoundedCornerShape(23.dp)).background(if (on) TraceColors.of(s) else Color.Transparent)
+                            .clickable { c.pickSurface(s) }.heightIn(min = 46.dp).padding(horizontal = pad, vertical = 13.dp)
+                            .testTag("trace-" + name.lowercase()).semantics { contentDescription = "$name boundary" + if (on) ", selected" else "" })
+                }
             }
+            RoundButton(Glyph.RESTART, "Start over", "trace-restart", enabled = !c.doc.isEmpty, size = round, onClick = onRestart)
+            val can = c.canSave
+            Text("Save", color = if (can) TraceColors.ink else Muted, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false,
+                modifier = Modifier.clip(RoundedCornerShape(26.dp)).background(if (can) Color.White else PanelHi).clickable(enabled = can, onClick = onSave)
+                    .heightIn(min = round).padding(horizontal = pad, vertical = 14.dp).testTag("trace-save"))
         }
-        RoundButton("⟲", "Start over", "trace-restart", enabled = !c.doc.isEmpty, onClick = onRestart)
-        val can = c.canSave
-        Text("Save", color = if (can) TraceColors.ink else Muted, fontSize = 15.sp, fontWeight = FontWeight.Bold,
-            modifier = Modifier.clip(RoundedCornerShape(26.dp)).background(if (can) Color.White else PanelHi).clickable(enabled = can, onClick = onSave)
-                .heightIn(min = 52.dp).padding(horizontal = 16.dp, vertical = 16.dp).testTag("trace-save"))
     }
 }
 
 @Composable
-private fun RoundButton(glyph: String, label: String, tag: String, enabled: Boolean = true, onClick: () -> Unit) {
-    Box(Modifier.size(52.dp).clip(CircleShape).background(PanelHi).clickable(enabled = enabled, onClick = onClick).testTag(tag).semantics { contentDescription = label },
+private fun RoundButton(glyph: Glyph, label: String, tag: String, enabled: Boolean = true, size: androidx.compose.ui.unit.Dp = 52.dp, onClick: () -> Unit) {
+    Box(Modifier.size(size).clip(CircleShape).background(PanelHi).clickable(enabled = enabled, onClick = onClick).testTag(tag).semantics { contentDescription = label },
         contentAlignment = Alignment.Center) {
-        Text(glyph, color = if (enabled) OnPanel else Color(0xFF5B666D), fontSize = 22.sp)
+        GlyphIcon(glyph, if (enabled) OnPanel else Color(0xFF5B666D), Modifier.size(24.dp))
+    }
+}
+
+private enum class Glyph { UNDO, REDO, RESTART, CLOSE, MORE, PLAY, PAUSE, EDIT }
+
+/** Icons drawn as shapes, so they look the same on every phone (no missing-symbol boxes). */
+@Composable
+private fun GlyphIcon(g: Glyph, color: Color, modifier: Modifier) {
+    Canvas(modifier) {
+        val w = size.minDimension
+        val st = Stroke(w * 0.10f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        fun p(x: Float, y: Float) = Offset(x * w, y * w)
+        when (g) {
+            Glyph.UNDO, Glyph.REDO -> withTransform({ if (g == Glyph.REDO) scale(-1f, 1f, center) }) {
+                drawPath(Path().apply {
+                    moveTo(w * 0.22f, w * 0.38f); lineTo(w * 0.60f, w * 0.38f)
+                    cubicTo(w * 0.90f, w * 0.38f, w * 0.90f, w * 0.78f, w * 0.60f, w * 0.78f); lineTo(w * 0.34f, w * 0.78f)
+                }, color, style = st)
+                drawPath(Path().apply { moveTo(w * 0.40f, w * 0.20f); lineTo(w * 0.22f, w * 0.38f); lineTo(w * 0.40f, w * 0.56f) }, color, style = st)
+            }
+            Glyph.RESTART -> {
+                drawArc(color, -50f, 290f, false, p(0.20f, 0.20f), Size(w * 0.60f, w * 0.60f), style = st)
+                drawPath(Path().apply { moveTo(w * 0.70f, w * 0.06f); lineTo(w * 0.70f, w * 0.28f); lineTo(w * 0.92f, w * 0.28f) }, color, style = st)
+            }
+            Glyph.CLOSE -> { drawLine(color, p(0.22f, 0.22f), p(0.78f, 0.78f), st.width, StrokeCap.Round); drawLine(color, p(0.78f, 0.22f), p(0.22f, 0.78f), st.width, StrokeCap.Round) }
+            Glyph.MORE -> for (y in listOf(0.22f, 0.5f, 0.78f)) drawCircle(color, w * 0.085f, p(0.5f, y))
+            Glyph.PLAY -> drawPath(Path().apply { moveTo(w * 0.24f, w * 0.14f); lineTo(w * 0.86f, w * 0.5f); lineTo(w * 0.24f, w * 0.86f); close() }, color)
+            Glyph.PAUSE -> { drawRect(color, p(0.20f, 0.14f), Size(w * 0.22f, w * 0.72f)); drawRect(color, p(0.58f, 0.14f), Size(w * 0.22f, w * 0.72f)) }
+            Glyph.EDIT -> {
+                drawLine(color, p(0.30f, 0.70f), p(0.76f, 0.24f), w * 0.20f, StrokeCap.Butt)
+                drawPath(Path().apply { moveTo(w * 0.12f, w * 0.88f); lineTo(w * 0.20f, w * 0.62f); lineTo(w * 0.38f, w * 0.80f); close() }, color)
+            }
+        }
     }
 }
 
@@ -419,7 +497,8 @@ private fun SettingsPanel(c: TraceController, onClose: () -> Unit) {
             Toggle("Haptics", null, s.haptics) { c.updateSettings(s.copy(haptics = it)) }
             val inches = s.solver.pivotRadiusM / 0.0254
             Text("Phone is %.0f in in front of where you turn".format(inches), color = OnPanel, fontSize = 13.sp)
-            Slider(inches.toFloat(), { c.updateSettings(s.copy(solver = s.solver.copy(pivotRadiusM = it.roundToInt() * 0.0254))) }, valueRange = 0f..24f, steps = 23,
+            Slider(inches.toFloat(), { c.updateSettings(s.copy(solver = s.solver.copy(pivotRadiusM = it.roundToInt() * 0.0254))) }, valueRange = 0f..24f,
+                colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = TraceColors.floor, inactiveTrackColor = PanelHi),
                 modifier = Modifier.height(32.dp).testTag("trace-pivot"))
             Text("Turn while watching a traced line. If it slides off the edge, change this until it stays.", color = Muted, fontSize = 11.sp)
         }
@@ -433,7 +512,8 @@ private fun Toggle(title: String, sub: String?, value: Boolean, onChange: (Boole
             Text(title, color = OnPanel, fontSize = 13.sp)
             if (sub != null) Text(sub, color = Muted, fontSize = 11.sp)
         }
-        Switch(value, onChange, modifier = Modifier.height(30.dp))
+        Switch(value, onChange, modifier = Modifier.height(30.dp), colors = SwitchDefaults.colors(
+            checkedTrackColor = TraceColors.floor, checkedThumbColor = Color.White, uncheckedTrackColor = PanelHi, uncheckedThumbColor = Muted, uncheckedBorderColor = Muted))
     }
 }
 

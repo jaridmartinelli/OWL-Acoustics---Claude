@@ -212,7 +212,7 @@ object StrokeFitter {
      * @param minSegment shortest line kept (pixels); shorter pieces are finger wobble or the flick on lifting
      * @param start an existing point the stroke continues from; kept exactly
      */
-    fun fit(points: List<StrokePoint>, tol: Double, minSegment: Double, start: Vec2? = null): StrokeFit? {
+    fun fit(points: List<StrokePoint>, tol: Double, minSegment: Double, start: Vec2? = null, minTail: Double = 2.5 * minSegment): StrokeFit? {
         var pts = points
         if (start != null) pts = listOf(StrokePoint(start.x, start.y, true)) + pts
         if (pts.size < 2) return null
@@ -280,7 +280,10 @@ object StrokeFitter {
         val snapped = (0 until breaks.size - 1).map { s ->
             val seg = (breaks[s]..breaks[s + 1]).map { pts[it] }
             seg.count { it.snapped } >= 0.6 * seg.size
-        }
+        }.toMutableList()
+        // a stroke that runs a little past a corner ends at the corner; the stub still helped to locate it
+        if (verts.size >= 3 && verts.last().distanceTo(verts[verts.size - 2]) < minTail) { verts.removeAt(verts.size - 1); snapped.removeAt(snapped.size - 1) }
+        if (start == null && verts.size >= 3 && verts[0].distanceTo(verts[1]) < minTail) { verts.removeAt(0); snapped.removeAt(0) }
         return StrokeFit(verts, snapped)
     }
 }

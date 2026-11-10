@@ -22,6 +22,8 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.owlacoustics.domain.geometry.Vec3
 import com.owlacoustics.domain.trace.EdgeMap
@@ -92,8 +94,9 @@ class RotationTracker(context: Context) : SensorEventListener {
     private var sameClock: Boolean? = null
     val available get() = sensor != null
 
-    fun start() { sensor?.let { sm.registerListener(this, it, 10_000) } }
-    fun stop() = sm.unregisterListener(this)
+    private var listening = false
+    fun start() { if (!listening) sensor?.let { listening = sm.registerListener(this, it, 10_000) } }
+    fun stop() { sm.unregisterListener(this); listening = false }
 
     override fun onSensorChanged(e: SensorEvent) {
         val now = SystemClock.elapsedRealtimeNanos()
@@ -195,6 +198,7 @@ class SensorTraceFeed : TraceFeed {
     private var packed: ByteBuffer? = null
     private var cameraClockSame: Boolean? = null
     @Volatile private var running = false
+    private var detach: (() -> Unit)? = null
 
     @OptIn(ExperimentalCamera2Interop::class)
     override fun start(context: Context, owner: LifecycleOwner) {
@@ -203,6 +207,10 @@ class SensorTraceFeed : TraceFeed {
         val ex = Executors.newSingleThreadExecutor().also { exec = it }
         val tr = RotationTracker(context).also { tracker = it; it.start() }
         if (!tr.available) onProblem?.invoke("This phone has no rotation sensor, so lines cannot stay in place.")
+        // no sensor use while the app is in the background
+        val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) tr.start() else if (e == Lifecycle.Event.ON_PAUSE) tr.stop() }
+        owner.lifecycle.addObserver(obs)
+        detach = { owner.lifecycle.removeObserver(obs) }
         val future = ProcessCameraProvider.getInstance(context)
         future.addListener({
             if (!running) return@addListener
@@ -226,6 +234,7 @@ class SensorTraceFeed : TraceFeed {
 
     override fun stop() {
         running = false
+        detach?.invoke(); detach = null
         runCatching { provider?.unbindAll() }
         tracker?.stop(); tracker = null
         exec?.shutdown(); exec = null
