@@ -41,13 +41,14 @@ import androidx.core.content.ContextCompat
 import com.google.ar.core.ArCoreApk
 import com.owlacoustics.capturelab.ar.ArAutoScreen
 import com.owlacoustics.capturelab.ar.ArTraceScreen
+import com.owlacoustics.capturelab.trace.TraceScreen
 import com.owlacoustics.domain.capturelab.Score
 import com.owlacoustics.domain.capturelab.Scorecard
 import com.owlacoustics.domain.capturelab.Truth
 import java.text.DateFormat
 import java.util.Date
 
-enum class Screen { HOME, HEIGHT, AR_TRACE, SPIN, AIM, AR_AUTO, RESULTS }
+enum class Screen { HOME, HEIGHT, AR_TRACE, SPIN, AIM, AR_AUTO, TRACE, RESULTS }
 
 class LabActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,6 +76,7 @@ class LabActivity : ComponentActivity() {
                         Screen.SPIN -> SpinScreen(store, home)
                         Screen.AIM -> AimTiltScreen(store, home)
                         Screen.AR_AUTO -> ArAutoScreen(store, home)
+                        Screen.TRACE -> TraceScreen(store, home)
                         Screen.RESULTS -> Results(store, home)
                     }
                 }
@@ -104,13 +106,13 @@ private fun Home(store: LabStore, go: (Screen) -> Unit) {
             Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("2. Phone height: " + (st.eyeHeightM?.let { ft(it) } ?: "not set"), style = MaterialTheme.typography.titleSmall)
-                    Text("Needed by methods 2, 4, 6. Set it with method 7 (door) or type it. ${st.eyeHeightSource}", style = MaterialTheme.typography.bodySmall)
+                    Text("Needed by methods 2, 4, 6 (not 8). Set it with method 7 (door) or type it. ${st.eyeHeightSource}", style = MaterialTheme.typography.bodySmall)
                 }
                 OutlinedButton({ go(Screen.HEIGHT) }) { Text("7 · Set") }
             }
         }
         Text("3. Scan with each method", style = MaterialTheme.typography.titleSmall)
-        val rows = listOf(Method.AR_TRACE to Screen.AR_TRACE, Method.AR_AUTO to Screen.AR_AUTO, Method.AIM_TILT to Screen.AIM, Method.SPIN_EDGE to Screen.SPIN)
+        val rows = listOf(Method.TRACE to Screen.TRACE, Method.AR_TRACE to Screen.AR_TRACE, Method.AR_AUTO to Screen.AR_AUTO, Method.AIM_TILT to Screen.AIM, Method.SPIN_EDGE to Screen.SPIN)
         for ((m, s) in rows) {
             val label = if (m == Method.SPIN_EDGE) "2 + 6 · Spin (floor-line + AI depth)" else m.title
             val runs = st.results.filter { it.method == m || (m == Method.SPIN_EDGE && it.method == Method.SPIN_DEPTH) }.size
