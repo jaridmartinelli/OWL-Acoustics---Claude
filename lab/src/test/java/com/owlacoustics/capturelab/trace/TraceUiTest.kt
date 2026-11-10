@@ -239,8 +239,30 @@ class TraceUiTest {
         shot("01-aim-live")
         assertTrue(c.coach().startsWith("Aim at where the floor meets a wall"))
 
+        // --- mid-stroke: the picture is frozen, the line clings to the floor edge, the loupe shows what the finger hides ---
+        run {
+            val pose = feed.pose!!
+            val path = (0..40).mapNotNull { Pinhole.project(k, pose, room.along(room.lengths[0] * 0.3 + it * 0.03, room.zf)) }.map { onCanvas(it + Vec2(0.0, 7.0)) }
+            canvas.performTouchInput { down(path.first()); for (p in path.drop(1)) moveTo(p) }
+            rule.waitForIdle()
+            assertNotNull("frozen as soon as the finger draws", c.frozen)
+            assertNotNull(c.strokeFit)
+            val (at, snapped) = c.loupeAt!!
+            assertTrue("clinging to an edge", snapped)
+            // the finger is 7 px below the floor line; the snapped point is on it
+            val truth = Pinhole.project(k, pose, room.along(room.lengths[0] * 0.3 + 40 * 0.03, room.zf))!!
+            assertTrue("snapped point is ${at.distanceTo(truth)} px from the floor line", at.distanceTo(truth) < 3.0)
+            shot("02-tracing-with-loupe")
+            canvas.performTouchInput { up() }
+            rule.waitForIdle()
+            assertEquals(2, c.doc.floor.corners.size)
+            rule.onNodeWithTag("trace-undo").performClick()
+            assertTrue(c.doc.isEmpty)
+            resume()
+        }
+
         // --- floor ---
-        traceLoop(room.zf, Surface.FLOOR) { v -> if (v == 2) shot("02-floor-growing-frozen") }
+        traceLoop(room.zf, Surface.FLOOR) { v -> if (v == 2) shot("03-floor-growing-frozen") }
         assertEquals("four real corners, mid-wall joins merged", 4, c.doc.floor.corners.size)
         assertEquals(ScaleBasis.PROVISIONAL, c.solution.basis)
         assertTrue(c.solution.segments.all { it.snapped })
@@ -264,13 +286,13 @@ class TraceUiTest {
         // 8 ft assumed, real ceiling 8' 2": walls read about 2% short
         val assumedErr = worstWallError()
         assertTrue("assumed-ceiling error ${assumedErr / INCH} in", assumedErr > 1.5 * INCH && assumedErr < 6 * INCH)
-        shot("03-ceiling-line-frozen")
+        shot("04-ceiling-line-frozen")
         resume()
 
         // --- a view of the whole corner: mesh on floor, walls and ceiling ---
         rule.onNodeWithTag("trace-floor").performClick()
         look(atan2(room.poly[1].y, room.poly[1].x), Math.toRadians(-4.0))
-        shot("04-mesh-assumed-ceiling")
+        shot("05-mesh-assumed-ceiling")
 
         // --- type the long wall: everything calibrates ---
         rule.onNodeWithTag("trace-freeze").performClick(); rule.waitForIdle()
@@ -283,7 +305,7 @@ class TraceUiTest {
         rule.onNodeWithTag("trace-edit").assertIsDisplayed()
         rule.onNodeWithTag("trace-edit").performTextReplacement("15 0 1/8")
         rule.waitForIdle()
-        shot("05-typing-on-the-line")
+        shot("06-typing-on-the-line")
         rule.onNodeWithTag("trace-edit").performImeAction()
         rule.waitForIdle()
         assertNull(c.editing)
@@ -298,7 +320,7 @@ class TraceUiTest {
         assertEquals(98 * INCH, c.solution.ceilingHeight, 1.5 * INCH)
         assertNull(c.solution.ceilingWarning)
         assertTrue(c.scaleTag().startsWith("Calibrated"))
-        shot("06-calibrated-all-sizes")
+        shot("07-calibrated-all-sizes")
 
         // an unreadable entry is refused in place
         draw()
@@ -326,7 +348,7 @@ class TraceUiTest {
         assertEquals(4, c.doc.floor.corners.size)
         assertNotNull(c.selected)
         draw()
-        shot("07-marker-with-delete")
+        shot("08-marker-with-delete")
         val del = c.deleteBox!!.center
         canvas.performTouchInput { click(del) }
         rule.waitForIdle()
@@ -395,14 +417,14 @@ class TraceUiTest {
         println("TRACE-UI worst wall error with typed ceiling height only: %.2f in".format(err / INCH))
         assertTrue("worst ${err / INCH} in", err < 2 * INCH)
         look(atan2(room.poly[2].y, room.poly[2].x), Math.toRadians(8.0))
-        shot("08-both-loops-ceiling-typed")
+        shot("09-both-loops-ceiling-typed")
 
         // settings panel opens without scrolling and its switches change behaviour
         rule.onNodeWithTag("trace-settings").performClick()
         rule.waitForIdle()
         rule.onNodeWithTag("trace-settings-panel").assertIsDisplayed()
         rule.onNodeWithTag("trace-pivot").assertIsDisplayed()
-        shot("09-test-switches")
+        shot("10-test-switches")
         assertEquals(0, rule.onAllNodes(SemanticsMatcher("scrollable") { it.config.getOrNull(SemanticsProperties.VerticalScrollAxisRange) != null }).fetchSemanticsNodes().size)
         rule.onNodeWithTag("trace-settings-done").performClick()
         c.updateSettings(c.settings.copy(freeze = FreezeMode.OFF))
@@ -425,6 +447,6 @@ class TraceUiTest {
             assertTrue("$tag height ${size.height}", size.height in 92..112)
         }
         assertTrue(rule.onNodeWithTag("trace-save").fetchSemanticsNode().size.width >= 100)
-        shot("10-small-phone")
+        shot("11-small-phone")
     }
 }

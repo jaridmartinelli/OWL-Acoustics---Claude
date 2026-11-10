@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -411,7 +412,7 @@ private fun BottomBar(c: TraceController, onRestart: () -> Unit, onSave: () -> U
             val can = c.canSave
             Text("Save", color = if (can) TraceColors.ink else Muted, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false,
                 modifier = Modifier.clip(RoundedCornerShape(26.dp)).background(if (can) Color.White else PanelHi).clickable(enabled = can, onClick = onSave)
-                    .heightIn(min = round).padding(horizontal = pad, vertical = 14.dp).testTag("trace-save"))
+                    .heightIn(min = round).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = pad, vertical = 12.dp).testTag("trace-save"))
         }
     }
 }
@@ -496,7 +497,7 @@ private fun SettingsPanel(c: TraceController, onClose: () -> Unit) {
             Toggle("Show ~estimates before a size is typed", null, s.showEstimates) { c.updateSettings(s.copy(showEstimates = it)) }
             Toggle("Haptics", null, s.haptics) { c.updateSettings(s.copy(haptics = it)) }
             val inches = s.solver.pivotRadiusM / 0.0254
-            Text("Phone is %.0f in in front of where you turn".format(inches), color = OnPanel, fontSize = 13.sp)
+            Text("Phone held %.0f in from the point you turn around".format(inches), color = OnPanel, fontSize = 13.sp)
             Slider(inches.toFloat(), { c.updateSettings(s.copy(solver = s.solver.copy(pivotRadiusM = it.roundToInt() * 0.0254))) }, valueRange = 0f..24f,
                 colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = TraceColors.floor, inactiveTrackColor = PanelHi),
                 modifier = Modifier.height(32.dp).testTag("trace-pivot"))

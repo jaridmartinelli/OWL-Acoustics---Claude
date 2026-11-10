@@ -248,6 +248,10 @@ class SensorTraceFeed : TraceFeed {
         val hw = w / 2; val hh = h / 2
         val lw = if (swap) hh else hw; val lh = if (swap) hw else hh
         val fb = pool.obtain(w, h, lw, lh) ?: return
+        try { fill(img, fb, lens, tr, w, h, rot, swap, hw, hh, lw) } catch (t: Throwable) { fb.refs.decrementAndGet(); throw t }
+    }
+
+    private fun fill(img: ImageProxy, fb: FrameBuffer, lens: LensModel, tr: RotationTracker, w: Int, h: Int, rot: Int, swap: Boolean, hw: Int, hh: Int, lw: Int) {
         val plane = img.planes[0]
         val buf = plane.buffer; val rs = plane.rowStride
         if (row.size < w * 4) row = ByteArray(w * 4)

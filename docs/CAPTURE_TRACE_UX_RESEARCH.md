@@ -1,7 +1,8 @@
 # Camera Trace ("magnetic lasso" room capture): touch-and-feel research (2026-11-10)
 
-Status: research and predictions only. Nothing here is built or device-tested. The owner's wireframe mockup is still
-to come and outranks any layout choice below.
+Status: research and predictions. The module was built from them on 2026-11-10 as method 8 in the Capture Lab
+(`docs/DECISIONS.md` E-012; stills in `docs/capture-trace/`). It has not been run on a phone; every prediction below
+is still to be confirmed there.
 
 The idea: on the live camera view the user traces the floor boundary (blue) and the ceiling boundary (yellow) with a
 finger. The line clings to the edge like Photoshop's magnetic lasso, stays pinned to the room when the phone moves,
@@ -35,10 +36,13 @@ and the floor, walls (green) and ceiling fill with a diagonal mesh in real time.
 | 12 | **Dark halo on every line and label; surfaces also differ by mesh direction, not colour alone.** Blue floor, yellow ceiling, green walls as the owner specified. | Text and lines over video need an outline; colour should not carry meaning alone (Penn State accessibility guidance; caption legibility guides). Green and yellow can look alike with some colour-vision differences (general knowledge, not from these searches). | Medium |
 | 13 | **Ceiling-first is offered, tap-to-force covers hidden floor corners.** | Room-scan guides list furniture blocking wall boundaries, and apps catching furniture edges instead of walls, as common failures (vendor and blog sources). | Low (weak sources) |
 
-## Open points for the owner
+## How the build differs from the table
 
-- Mesh direction differing per surface (row 12) is a small departure from "diagonal mesh" on all three. Colours stay as specified.
-- Freeze-on-touch is the default; the live variant stays as a switch for comparison.
+- Row 12: the mesh is a square one-foot grid on every surface, as in the owner's mockup, with FLOOR / WALL / CEILING
+  tags; it does not vary direction per surface.
+- Row 1: the picture freezes when the finger starts to draw and, by default, stays frozen until Resume (switches:
+  only while touching, never).
+- Row 8: Walk (ARCore) mode is not built, so the reduced-haptics rule is not exercised.
 
 ## Sources
 

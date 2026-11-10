@@ -3,13 +3,20 @@
 Authority order (brief 02): newest explicit user decision → approved decisions → supplied requirements
 (`brief/03`–`brief/08`) / `docs/OWL_MASTER_SPEC.md`. Entries written by the assistant are labeled
 **ENG** (engineering choice) and cannot approve a scope change or erase a requirement. Entries labeled
-**BRIEF** restate the supplied brief. No owner decision has been received in this project beyond the brief.
+**BRIEF** restate the supplied brief. Owner decisions received after the brief are listed in section 1 (and, for
+earlier ones, as "Owner instruction/request" entries in the engineering log).
 
 ## 1. Explicit owner decisions
 
 | ID | Date | Decision | Source |
 |----|------|----------|--------|
 | U-00 | 2026-10-25 | The complete fresh-build brief (sections 01–08, D-01…D-20, B-01…B-10, F-01…F-70) is the baseline. | Supplied handoff package (checksums match `brief/Package_Manifest.json`) |
+| U-01 | 2026-11-10 | Camera trace capture: on the camera view the user draws the floor boundary (blue) and the ceiling boundary (yellow) with a finger; the line behaves like Photoshop's magnetic lasso (clings to the edge); boundaries stay where they were drawn as the phone moves; floor, walls (green) and ceiling are meshed in real time. Boundary look: a thick glowing line in the spirit of the owner's reference screenshot, not a copy. | Owner messages and mockups |
+| U-02 | 2026-11-10 | Required controls: Undo, Redo, Floor / Ceiling selector (selecting one locks the other; **no Wall selector**: walls are whatever is not floor or ceiling), tap a measurement to type it on the picture, one delete action for points, Restart with a confirmation that Undo still reverses, Save. | Owner messages |
+| U-03 | 2026-11-10 | Points are squares. One kind of point with two jobs: a corner bends the line and shapes the room; a marker sits on a straight line and marks a hard boundary so a measurement can be typed between neighbours. | Owner mockup; proposal accepted |
+| U-04 | 2026-11-10 | Scale: the ceiling is assumed 8 ft unless specified, so there is always a base. A typed measurement defines the grid and recalibrates the whole room at once. Once one measurement besides the ceiling default is entered, all measurements show on the grid, updating while the boundary is drawn. Target: within ±6 in. | Owner message |
+| U-05 | 2026-11-10 | Accepted proposals: a typed size beats the assumed ceiling and the app reports and flags the ceiling it implies; ask for the longest wall first; typed sizes are marked locked. Touch-and-feel choices are delegated to engineering, to be made from research (`docs/CAPTURE_TRACE_UX_RESEARCH.md`). | "I like the changes you suggested"; "handle the touch and feel using research" |
+| U-06 | 2026-11-10 | **Open (not answered):** how door and window heights are captured in the camera view (+ Door / Window button, Wall mode, floor markers, or 2D builder only). Not built. Marker points already give positions along a wall. | Asked twice; no answer yet |
 
 ## 2. Routine defaults carried from the brief (BRIEF)
 
@@ -92,3 +99,38 @@ material owner decision.
   `com.owlacoustics.capturelab.dev`) with methods 1, 2 (model-free floor-line variant), 4, 5, 6 and 7 plus a
   tape-measure scorecard; method 3 paused by owner. Depth model: Depth Anything V2 Small int8 ONNX (Apache-2.0),
   downloaded at build time with checksum. arm64-v8a only. Portrait lock is intentional (tilt maths assumes upright).
+- E-012 (2026-11-10) **Camera trace module (U-01…U-05)**, built as method 8 in the Capture Lab (`lab/.../trace`, maths in
+  `domain/.../trace`). Lab v0.2.0. Research and predictions: `docs/CAPTURE_TRACE_UX_RESEARCH.md`; stills from the
+  rendered test: `docs/capture-trace/`.
+  - **Room inputs (observations):** each corner keeps the direction it was seen in (a unit ray), the phone's heading
+    at that moment and, when a tracker supplies it, the camera position. Markers keep their fraction along a line.
+    Typed lengths keep the text as typed. Corrections never overwrite an observation except a dragged corner.
+  - **Scale, weakest to strongest:** guessed phone height (floor line only; labelled "Scale not set") → 8 ft default
+    ceiling tied to both lines (labelled "Assumes…", sizes hidden per U-04) → typed ceiling height → typed length(s).
+    Floor and ceiling lines of the same wall give the wall's distance without knowing the phone height. A typed
+    length fixes the scale and the ceiling height is then worked out from the lines; outside 7–10.5 ft, or more than
+    4 in from a typed ceiling, it is flagged.
+  - **Plan outline:** wall directions are kept, squared to the room's main axes within 10° (switchable), typed walls
+    are held, and the remaining misclosure is spread over untyped walls. The mesh and boundaries stay pinned to the
+    observation; only the plan card and the saved result use the adjusted outline.
+  - **Assumptions shown to the user and stored in every saved result:** pivot distance (phone 12 in from the turning
+    axis by default; adjustable; ignoring it shrinks a room by about twice that distance), ceiling basis, squaring,
+    freehand (unsnapped) lines. Lens distortion is not modelled; if lens data is missing a 66° field of view is assumed
+    and a warning is shown.
+  - **Delegated feel choices (from the research):** freeze the picture while tracing (default "until Resume";
+    switches: only while touching, never), loupe above the finger, search band about one thumb-pad wide, dashed line
+    where no edge is found, corners placed where fitted lines cross, lowest edge at the floor and highest at the
+    ceiling, three haptic events, controls in a bottom band at least 46 dp tall, no scrolling. A drag from the end
+    point continues the line; touching the first point closes the loop; double-tap or the Delete bubble removes a
+    point; tapping a line adds a marker; two fingers zoom a frozen picture or, on the live view, slide the lines
+    sideways back onto the room (heading drift).
+  - **Empirical checks still owed (device):** line stability while turning, the right pivot distance, edge snapping
+    on real floors and baseboards, timing between camera and motion sensor, accuracy against a tape measure.
+  - **Evidence:** 19 JVM tests on the geometry (incl. simulated 0.3° tracing noise: worst-wall error after one typed
+    wall p95 2.3 in, max 4.1 in over 400 trials) and 3 Robolectric rendered tests driving the real screen with a
+    simulated room and simulated finger strokes (worst wall error 0.01 in after one typed wall on ideal pictures).
+    These are simulations: they show the chain is correct, not how accurate a phone will be.
+  - **Not built:** Walk mode with ARCore tracking (the model and solver accept tracked camera positions and are
+    unit-tested; the camera feed for it is not written); door/window heights (U-06); sending the result to the main
+    app's 2D builder (the lab saves to its own scorecard); undo history across app restarts (the drawing itself is
+    autosaved).
