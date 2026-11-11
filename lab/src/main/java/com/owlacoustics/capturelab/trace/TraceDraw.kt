@@ -109,7 +109,7 @@ private fun DrawScope.boundaryLine(a: Offset, b: Offset, color: Color, alpha: Fl
 }
 
 private fun DrawScope.anchor(p: Offset, kind: AnchorKind, color: Color, alpha: Float, selected: Boolean) {
-    val r = dp(if (selected) 9f else 6.5f)
+    val r = dp(if (selected) 11f else 8.5f)
     val tl = Offset(p.x - r, p.y - r); val sz = Size(2 * r, 2 * r)
     drawRect(TraceColors.ink.copy(alpha = alpha), Offset(tl.x - dp(2f), tl.y - dp(2f)), Size(sz.width + dp(4f), sz.height + dp(4f)))
     if (kind == AnchorKind.CORNER) drawRect(color.copy(alpha = alpha), tl, sz)

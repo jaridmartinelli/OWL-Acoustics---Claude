@@ -89,6 +89,8 @@ private val Lime = Color(0xFFC6F432)
 
 private enum class Mode { PENDING, BRUSH, TWO, DONE }
 
+private const val HOLD_MS = 450L
+
 /**
  * Live camera scan: the app finds the floor, walls and ceiling as the phone moves and meshes them in one-foot
  * squares; a finger brush adds or takes away where it got the boundary wrong. Lab build, unverified on a phone.
@@ -145,8 +147,7 @@ fun TraceContent(c: TraceController, feed: TraceFeed, onClose: () -> Unit, onSav
         onDispose {
             feed.stop(); feed.onFrame = null; feed.onProblem = null
             c.detector = null
-            c.dispose()
-            det.close()
+            c.dispose(det)
             view.keepScreenOn = false
         }
     }
@@ -165,7 +166,7 @@ fun TraceContent(c: TraceController, feed: TraceFeed, onClose: () -> Unit, onSav
             Row(Modifier.fillMaxWidth().background(Panel).padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("OWL ACOUSTICS", color = OnPanel, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
                 Box(Modifier.padding(horizontal = 8.dp).width(1.dp).height(18.dp).background(Muted))
-                Text("Capture room", color = OnPanel, fontSize = 14.sp, maxLines = 1, modifier = Modifier.weight(1f))
+                Text("Capture room", color = OnPanel, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 IconBox(Glyph.MORE, "Test switches", "trace-settings", 40.dp) { showSettings = true }
                 Spacer(Modifier.width(6.dp))
                 Pill("Restart", "trace-restart", enabled = !c.scan.isEmpty, glyph = Glyph.RESTART) { confirmRestart = true }
@@ -219,8 +220,14 @@ private fun Viewport(c: TraceController, modifier: Modifier) {
                     val down = awaitFirstDown(requireUnconsumed = false)
                     val hit = c.viewMap()?.let { c.hit(down.position, it) } ?: Hit.Empty
                     var mode = Mode.PENDING
+                    var now = down.uptimeMillis
                     while (true) {
-                        val ev = if (mode == Mode.PENDING) withTimeoutOrNull(450) { awaitPointerEvent() } else awaitPointerEvent()
+                        // a hold is measured from the first touch: small jitter events must not restart the clock
+                        val ev = if (mode == Mode.PENDING) {
+                            val left = HOLD_MS - (now - down.uptimeMillis)
+                            if (left <= 0) null else withTimeoutOrNull(left) { awaitPointerEvent() }
+                        } else awaitPointerEvent()
+                        if (ev != null) now = ev.changes.firstOrNull()?.uptimeMillis ?: now
                         if (ev == null) {
                             // held still: a point opens its actions, anywhere else starts brushing
                             if (hit is Hit.Anchor) { c.hold(hit); mode = Mode.DONE } else if (c.tool != Tool.WALL) { c.brushDown(down.position); mode = Mode.BRUSH }
@@ -235,8 +242,9 @@ private fun Viewport(c: TraceController, modifier: Modifier) {
                             ev.changes.forEach { it.consume() }
                         } else if (pressed.size == 1 && (mode == Mode.PENDING || mode == Mode.BRUSH)) {
                             val ch = pressed[0]
-                            if (mode == Mode.PENDING && (ch.position - down.position).getDistance() > viewConfiguration.touchSlop && c.tool != Tool.WALL) {
-                                c.brushDown(down.position); mode = Mode.BRUSH
+                            if (mode == Mode.PENDING && (ch.position - down.position).getDistance() > viewConfiguration.touchSlop) {
+                                // Wall mode has no brush: a drag there does nothing (and is not a tap)
+                                if (c.tool == Tool.WALL) mode = Mode.DONE else { c.brushDown(down.position); mode = Mode.BRUSH }
                             }
                             if (mode == Mode.BRUSH) c.brushMove(ch.position)
                             ch.consume()

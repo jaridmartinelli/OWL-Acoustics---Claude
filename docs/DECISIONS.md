@@ -114,6 +114,9 @@ material owner decision.
   - **Not built:** walking with ARCore (stand-and-turn only); door as a scale reference; dragging a corner (corners can
     be removed, the brush moves walls). **No rendered tests** for this screen (owner instruction); one JVM test covers
     the model. Automatic detection, lens selection and the brush are unverified on a phone.
+  - 0.3.1 (review fixes): a hold is timed from the first touch, so finger jitter no longer stops point actions from
+    opening; a drag in Wall mode is ignored instead of acting as a tap; the depth model is closed on its own thread
+    after any running detection; corner anchors drawn larger.
 - E-012 (2026-11-10) **Camera trace module (U-01…U-05)**, built as method 8 in the Capture Lab (`lab/.../trace`, maths in
   `domain/.../trace`). Lab v0.2.0. Research and predictions: `docs/CAPTURE_TRACE_UX_RESEARCH.md`; stills from the
   rendered test: `docs/capture-trace/`.

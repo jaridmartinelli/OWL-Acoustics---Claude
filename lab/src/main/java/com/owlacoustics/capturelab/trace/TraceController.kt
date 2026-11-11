@@ -168,7 +168,13 @@ class TraceController(private val drafts: TraceDraftStore?) {
         if (next != scan) { scan = next; restored = false }
     }
 
-    fun dispose() { live?.release(); live = null; worker.shutdown(); save() }
+    /** Closes the depth model on the worker thread, after any detection still running there. */
+    fun dispose(det: AutoCloseable?) {
+        live?.release(); live = null
+        worker.execute { runCatching { det?.close() } }
+        worker.shutdown()
+        save()
+    }
 
     fun poseOf(f: TraceFrame): CameraPose {
         val r = Mat3.rotZ(yawFix) * f.rot
