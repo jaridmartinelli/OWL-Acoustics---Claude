@@ -84,15 +84,15 @@ Not part of the main app's acceptance rows. It exists so the owner can compare c
 | Item | Status | Notes |
 |---|---|---|
 | Methods 1, 2, 4, 5, 6, 7 and the tape-measure scorecard | IMPLEMENTED | Maths BUILD-TESTED on the JVM; screens never run on a device. |
-| Method 8 · Camera scan (2026-11-11, E-013; replaces the 0.2.0 tracing screen) | IMPLEMENTED | Live automatic floor/wall/ceiling detection, Add/Subtract brush, anchors, number pad, 3D model, widest lens. Geometry model BUILD-TESTED (JVM); the screen, detection, lens choice and brush have **no rendered tests and have not been verified on a phone**. Lab 0.3.1. |
+| Method 8 · Camera scan (2026-11-11, E-013; replaces the 0.2.0 tracing screen) | IMPLEMENTED | Live automatic floor/wall/ceiling detection, Add/Subtract brush, anchors, number pad, 3D model, widest lens. Geometry model BUILD-TESTED (JVM); the screen, detection, lens choice and brush have **no rendered tests and have not been verified on a phone**. Lab 0.3.2; first phone test (owner recording, 0.3.1) showed the screen running and the mesh growing, but a spiky boundary and the header under the status bar, both addressed in 0.3.2. |
 | Method 8 · Walk mode (ARCore tracking) | PLANNED | Shown disabled in the test switches. Solver accepts tracked positions (unit-tested); the ARCore camera feed is not written. |
 | Method 8 · door/window heights | BLOCKED | Owner decision U-06 not answered. |
 | Method 8 · hand-off to the main app's 2D builder | PLANNED | The lab saves to its own scorecard only. |
 | Method 3 · server video analysis | EXCLUDED-DEFERRED | Paused by the owner. |
 
-Lab artifact (2026-11-11): `dist/OWL-Capture-Lab-0.3.1-lab-debug.apk` (not committed) · package
-`com.owlacoustics.capturelab.dev` · versionCode 4 · versionName 0.3.1-lab · arm64-v8a · debug-signed (same key as before) ·
-APK SHA-256 `bceff9bf539598b191ed4d6361ca8f21545ad8c6627021e8f887b2cb23055ee3` (rebuilding gives different bytes). Built from the revision that contains this file.
+Lab artifact (2026-11-11): `dist/OWL-Capture-Lab-0.3.2-lab-debug.apk` (not committed) · package
+`com.owlacoustics.capturelab.dev` · versionCode 5 · versionName 0.3.2-lab · arm64-v8a · debug-signed (same key as before) ·
+APK SHA-256 `854d49cb5ea59ae39373512f7c0c60cd84dc795ba5077dccfb9d99b385d975e1` (rebuilding gives different bytes). Built from the revision that contains this file.
 Checks at that revision: domain tests passing, lab lint 0 errors; the lab has no rendered tests.
 
 Simulated figures for method 8 (not device measurements): with 0.3° of tracing error per point, the worst wall after

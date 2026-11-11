@@ -108,7 +108,7 @@ class TraceController(private val drafts: TraceDraftStore?) {
     /** Brush mode: false adds to the surface, true takes away. */
     var subtract by mutableStateOf(false)
     private val memory = CornerMemory()
-    val doc by derivedStateOf { ScanBuilder.build(scan, settings.borrowAcross, memory) }
+    val doc by derivedStateOf { ScanBuilder.build(scan, settings.borrowAcross, memory, settings.solver.squareCorners) }
     val solution by derivedStateOf { TraceSolver.solve(doc, settings.solver) }
     val mesh by derivedStateOf { TraceMeshBuilder.build(doc, solution, settings.solver, true) }
 

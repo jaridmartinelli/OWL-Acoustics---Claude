@@ -36,8 +36,8 @@ android {
         applicationId = "com.owlacoustics.capturelab.dev"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.3.1-lab"
+        versionCode = 5
+        versionName = "0.3.2-lab"
         // 64-bit ARM phones only (OnePlus Open is arm64); keeps the depth engine's native code from bloating the APK
         ndk { abiFilters += "arm64-v8a" }
     }

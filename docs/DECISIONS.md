@@ -117,6 +117,12 @@ material owner decision.
   - 0.3.1 (review fixes): a hold is timed from the first touch, so finger jitter no longer stops point actions from
     opening; a drag in Wall mode is ignored instead of acting as a tap; the depth model is closed on its own thread
     after any running detection; corner anchors drawn larger.
+  - 0.3.2 (after the owner's first phone recording of 0.3.1, in a cluttered room): the boundary had dozens of
+    jumping corners and spiky walls, and the header sat under the status bar. Changes: a direction counts only after
+    two sightings; later readings nudge the estimate instead of replacing it (running median); a ±3° median removes
+    lone spikes; with "Square up corners" on (default) walls are fitted at right angles in the room's own axes, and a
+    corner is added only when a jog explains enough of the scatter; the screen is padded clear of the system bars.
+    JVM test: 5% scatter plus 1 in 8 wild readings still gives 4 walls within 0.1 in (simulation).
 - E-012 (2026-11-10) **Camera trace module (U-01…U-05)**, built as method 8 in the Capture Lab (`lab/.../trace`, maths in
   `domain/.../trace`). Lab v0.2.0. Research and predictions: `docs/CAPTURE_TRACE_UX_RESEARCH.md`; stills from the
   rendered test: `docs/capture-trace/`.

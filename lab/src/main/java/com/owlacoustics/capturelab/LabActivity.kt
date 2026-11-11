@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -64,7 +65,7 @@ class LabActivity : ComponentActivity() {
                     if (screen != Screen.HOME) BackHandler { screen = Screen.HOME }
                     val home = { screen = Screen.HOME }
                     if (!granted && screen != Screen.HOME && screen != Screen.RESULTS) {
-                        Column(Modifier.padding(16.dp)) {
+                        Column(Modifier.safeDrawingPadding().padding(16.dp)) {
                             Text("The camera is needed to test capture methods.")
                             Button({ ask.launch(Manifest.permission.CAMERA) }) { Text("Allow camera") }
                             TextButton(home) { Text("Back") }
