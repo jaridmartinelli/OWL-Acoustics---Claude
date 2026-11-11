@@ -60,3 +60,57 @@ and the floor, walls (green) and ceiling fill with a diagonal mesh in real time.
 - Fatigue: [Consumed Endurance, CHI 2014](https://hci.cs.umanitoba.ca/Publications/details/consumed-endurance-a-metric-to-quantify-arm-fatigue-of-mid-air-interactions)
 - Legibility over video: [Penn State accessibility: contrast](https://accessibility.psu.edu/legibility/contrast), [caption outline vs shadow](https://blitzcutai.com/blog/caption-background-vs-outline-vs-shadow)
 - Scan failures: [Coohom guide](https://www.coohom.com/article/how-to-fix-room-scanning-and-measurement-errors-in-furniture-layout-apps), [magicplan AR scan](https://magicplan.app/blog/ar-room-scan)
+
+---
+
+# Rev. 2 (2026-11-11): automatic boundary plus a Quick Select brush
+
+After trying the 0.2.0 build the owner corrected the interaction model. Line tracing is not what was wanted.
+
+- **Automatic:** as the user walks, the app finds the floor (and ceiling) itself; the boundary clings to the walls,
+  as in the owner's reference screenshot ("Walk around Living Room — lining your plan up with it").
+- **Brush:** a correction tool that behaves like Photoshop's Quick Selection, shown in the owner's screen recording of
+  Photoshop on Android (tools: Tap select, Quick select brush, Lasso; add and subtract buttons): brush over an area
+  and the fill grows out to that area's edges.
+
+Status: research and predictions only. Not built.
+
+## Baseline app
+
+Two extended searches for the screenshot's wording did not identify the app, so the baseline is what the screenshot
+shows: a thick glowing cyan line with rounded joins on the floor–wall edge, thin blue floor grid lines, a one-line
+coaching pill with a close button, a progress card with a small plan and a percentage, a status pill and a Done
+button. It appears to be an iPhone app; whether it uses a depth sensor is not known.
+
+## Findings
+
+| # | Finding | Source |
+|---|---|---|
+| 1 | Quick Selection: drag over an area; it selects similar tones and textures, expands outward and stops at edges. Round adjustable brush. Add and Subtract modes. Auto-Enhance smooths the edge but is slower. | Adobe help (desktop and iPad), tutorials |
+| 2 | Automatic wall scanning without a depth sensor is hard on Android: magicplan's help says its scan features are not available on Android because Auto-Scan needs LiDAR; an open ARCore request asks Google for a RoomPlan-style room API. | magicplan help; arcore-android-sdk issue 1772 |
+| 3 | Non-LiDAR scanning is less accurate, and furniture or baseboards covering the floor–wall line force the app to estimate. | Vendor and blog guides (weak) |
+| 4 | ARCore guidance: show how to scan with an illustration or animation; give instant feedback when a surface is found; vertical surfaces are harder to detect than horizontal ones; on errors give one short fix at a time; ask for slow movement; avoid haptics while scanning because vibration can disturb tracking. | Google AR design guidelines and performance page (search extracts) |
+| 5 | No-LiDAR apps start by sweeping the floor until the plane is found, then mark corners at baseboard height; tracking drifts when the phone is whipped around. | Floor Plan App guide; ARchi VR |
+| 6 | Touch input is less precise and hides the picture; outlining is intuitive for non-experts; one contour is worth 3–5 clicks; strokes take effort. | Garcia et al. 2015; Pizenberg et al. 2017; IJCAI 2023 |
+
+## Predictions for the build
+
+| # | Feel decision | From |
+|---|---|---|
+| 1 | The floor fill starts by itself the moment the floor is found and grows as the phone moves. No button to start. | 4, 5, baseline |
+| 2 | The boundary line appears only where the app is confident a wall meets the floor; unsure stretches are dashed. A wall line settles once seen from enough views, so it does not swim. | baseline, 2, 3 |
+| 3 | One coaching line at a time: "Move slower", "Point lower to find the floor", "No wall found here: brush it in". | 4 |
+| 4 | No haptics while the camera is live and tracking. Haptics only for brush and point edits on a frozen picture. | 4 |
+| 5 | The brush works on a frozen picture: touching freezes it. The fill grows out from the stroke while dragging and stops at edges. | 1, 6, rev. 1 row 1 |
+| 6 | Two brush modes, Add and Erase, plus Undo. | 1, owner's mockup (eraser icon) |
+| 7 | One finger-sized brush ring shown around the touch point; pinch to zoom for fine work instead of a size slider. | 1, 6 |
+| 8 | On lifting the finger the ragged fill edge is straightened into wall lines with square corner points. | owner decision U-03 |
+| 9 | Automatic detection does most of the work; the brush is for what it misses, because strokes take effort. | 6 |
+| 10 | Progress shows how much of the way round the room has a wall line, in the plan card below the picture. | baseline |
+
+## Sources (rev. 2)
+
+- Quick Selection: [Adobe: Quick Selection tool](https://helpx.adobe.com/lt/photoshop/desktop/make-selections/automatic-color-based-selections/paint-a-selection-with-quick-selection-tool.html), [Adobe: selections on iPad](https://helpx.adobe.com/photoshop/ipad/select-and-mask/select-mask-on-ipad.html), [Photoshop Training Channel: Auto-Enhance](https://photoshoptrainingchannel.com/tips/quick-selection-tool-auto-enhance/)
+- Android without LiDAR: [magicplan help: scanning on Android](https://help.magicplan.app/scan-a-room-with-the-camera-of-your-mobile-device-android), [ARCore SDK issue 1772](https://github.com/google-ar/arcore-android-sdk/issues/1772), [Floor Plan App: measure with AR, no LiDAR](https://floorplan-app.com/guides/measure-a-room-with-ar-no-lidar.html), [ARchi VR](https://archi.metason.net/), [Coohom guide](https://www.coohom.com/article/why-furniture-layout-apps-don't-scan-your-room-correctly-and-how-to-fix-it)
+- ARCore guidance: [content placement](https://developers.google.com/ar/design/content/content-placement), [performance considerations](https://developers.google.com/ar/develop/runtime)
+- Touch segmentation: [Garcia et al., Graphics Interface 2015](https://graphicsinterface.org/wp-content/uploads/gi2015-11.pdf), [Pizenberg et al., Outlining objects on touch devices](https://hal.archives-ouvertes.fr/hal-01919274), [IJCAI 2023 contour-based segmentation](https://ijcai.org/proceedings/2023/147.md)
