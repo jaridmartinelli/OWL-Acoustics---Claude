@@ -71,6 +71,8 @@ class TraceFrame(
     @Volatile private var edges: EdgeMap? = null
     val edgesReady get() = edges != null
     fun edgeMap(): EdgeMap = edges ?: synchronized(this) { edges ?: EdgeMap.of(buf.lum, buf.lumW, buf.lumH).also { edges = it } }
+    /** The half-resolution picture as grey RGB pixels, for the depth model. */
+    fun gray(): IntArray { val l = buf.lum; return IntArray(buf.lumW * buf.lumH) { val v = l[it].toInt() and 255; (v shl 16) or (v shl 8) or v } }
     fun retain() { buf.refs.incrementAndGet() }
     fun release() { buf.refs.decrementAndGet() }
 }
@@ -158,6 +160,9 @@ class LensModel(private val focalMm: Double?, private val sensorLongMm: Double?,
         else streamLong * focalMm / sensorLongMm to false
     }
 
+    /** Focal length relative to sensor size: smaller means a wider view. */
+    fun relativeFocal(): Double = if (focalMm == null || sensorLongMm == null || sensorLongMm <= 0) Double.MAX_VALUE else focalMm / sensorLongMm
+
     companion object {
         @OptIn(ExperimentalCamera2Interop::class)
         fun of(info: Camera2CameraInfo): LensModel {
@@ -185,7 +190,9 @@ class FramePool(private val limit: Int = 8) {
 }
 
 /** Stand-and-turn feed: CameraX pictures paired with the rotation sensor. The phone's position is not tracked. */
-class SensorTraceFeed : TraceFeed {
+class SensorTraceFeed(private val widest: Boolean = true) : TraceFeed {
+    /** How much wider than the 1× lens the picture is (0.6 = the 0.6× lens). */
+    @Volatile private var zoom = 1.0
     override var onFrame: ((TraceFrame) -> Unit)? = null
     override var onProblem: ((String) -> Unit)? = null
     private val main = Handler(Looper.getMainLooper())
@@ -223,8 +230,13 @@ class SensorTraceFeed : TraceFeed {
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888).build()
                 p.unbindAll()
-                val cam = p.bindToLifecycle(owner, CameraSelector.DEFAULT_BACK_CAMERA, analysis)
+                // widest back lens: a separate wide camera if the phone lists one, otherwise zoom the main one all the way out
+                val backs = p.availableCameraInfos.filter { it.lensFacing == CameraSelector.LENS_FACING_BACK }
+                val pick = if (widest) backs.minByOrNull { LensModel.of(Camera2CameraInfo.from(it)).relativeFocal() } else null
+                val cam = p.bindToLifecycle(owner, pick?.cameraSelector ?: CameraSelector.DEFAULT_BACK_CAMERA, analysis)
                 val lens = LensModel.of(Camera2CameraInfo.from(cam.cameraInfo))
+                val minZoom = cam.cameraInfo.zoomState.value?.minZoomRatio ?: 1f
+                if (widest && minZoom < 0.99f) { cam.cameraControl.setZoomRatio(minZoom); zoom = minZoom.toDouble() } else zoom = 1.0
                 analysis.setAnalyzer(ex) { img -> try { handle(img, lens, tr) } catch (_: Throwable) {} finally { img.close() } }
             } catch (e: Exception) {
                 onProblem?.invoke("Camera could not start: " + (e.message ?: e.javaClass.simpleName))
@@ -285,7 +297,8 @@ class SensorTraceFeed : TraceFeed {
         val same = cameraClockSame ?: (now - ts in 0..1_000_000_000L).also { cameraClockSame = it }
         val pose = tr.at(if (same) ts else now - 60_000_000L)
         val uw = if (swap) h else w; val uh = if (swap) w else h
-        val (f, guessed) = lens.focalPx(maxOf(w, h))
+        val (f1, guessed) = lens.focalPx(maxOf(w, h))
+        val f = f1 * zoom
         val frame = TraceFrame(fb, rot, Intrinsics(f, uw / 2.0, uh / 2.0, uw, uh), pose ?: Mat3.identity, null, ++seq, tr.turnRate(), pose != null, guessed)
         main.post { val cb = onFrame; if (cb != null && running) cb(frame) else frame.release() }
     }

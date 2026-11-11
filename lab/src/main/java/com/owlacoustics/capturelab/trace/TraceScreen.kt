@@ -1,18 +1,14 @@
 package com.owlacoustics.capturelab.trace
 
-import android.app.Activity
-import android.os.Build
-import android.view.HapticFeedbackConstants
-import android.view.WindowManager
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculatePan
-import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -28,13 +24,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.activity.compose.BackHandler
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
@@ -42,44 +33,37 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,56 +74,55 @@ import com.owlacoustics.capturelab.Method
 import com.owlacoustics.capturelab.P
 import com.owlacoustics.capturelab.ft
 import com.owlacoustics.domain.trace.ScaleBasis
-import com.owlacoustics.domain.trace.Surface
 import com.owlacoustics.domain.units.DisplayUnits
 import com.owlacoustics.domain.units.LengthFormat
 import java.util.UUID
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
 
-private val Panel = Color(0xFF12181C)
-private val PanelHi = Color(0xFF222B31)
+private val Panel = Color(0xFF14181C)
+private val PanelHi = Color(0xFF232A30)
 private val OnPanel = Color(0xFFF2F5F6)
 private val Muted = Color(0xFFA9B4BA)
+private val Lime = Color(0xFFC6F432)
 
-private enum class Mode { PENDING, STROKE, DRAG, TWO }
+private enum class Mode { PENDING, BRUSH, TWO, DONE }
 
 /**
- * Camera trace: freeze a view, trace the floor and ceiling lines with a finger. Lines cling to edges, stay pinned to
- * the room, and the room is meshed in one-foot squares. Lab build: the switches under ⋮ are there to be compared.
+ * Live camera scan: the app finds the floor, walls and ceiling as the phone moves and meshes them in one-foot
+ * squares; a finger brush adds or takes away where it got the boundary wrong. Lab build, unverified on a phone.
  */
 @Composable
 fun TraceScreen(store: LabStore, onDone: () -> Unit) {
     val ctx = LocalContext.current
     val c = remember { TraceController(TraceDraftStore(ctx.applicationContext)) }
-    val feed = remember { SensorTraceFeed() }
+    val feed = remember { SensorTraceFeed(c.settings.widestLens) }
     val started = remember { System.currentTimeMillis() }
-    TraceContent(c, feed, onClose = onDone, onSave = {
-        resultOf(c, started)?.let { store.addResult(it); onDone() }
-    })
+    TraceContent(c, feed, onClose = onDone, onSave = { resultOf(c, started)?.let { store.addResult(it); onDone() } })
 }
 
 /** The saved lab result: the plan outline plus, in the note, everything the scale and shape rest on. */
 fun resultOf(c: TraceController, startedMs: Long): LabResult? {
     val plan = c.solution.plan ?: return null
     if (!plan.closed) return null
-    val s = c.solution; val set = c.settings
-    val unsnapped = s.segments.count { !it.snapped }
+    val s = c.solution
+    val inferred = s.segments.count { !it.snapped }
     val note = listOf(
         when (s.basis) {
-            ScaleBasis.TYPED_LENGTH -> "scale from ${c.doc.typed.size} typed size(s)"
+            ScaleBasis.TYPED_LENGTH -> "scale from ${c.scan.typed.size} typed size(s)"
             ScaleBasis.CEILING_TYPED -> "scale from typed ceiling ${ft(s.ceilingHeight)}"
             ScaleBasis.CEILING_DEFAULT -> "scale from ASSUMED ${ft(s.ceilingHeight)} ceiling"
             ScaleBasis.PROVISIONAL -> "scale NOT set (guessed phone height)"
         },
         "ceiling ${ft(s.ceilingHeight)}",
-        "outline from ${plan.source.name.lowercase()} line",
-        if (plan.squared) "corners squared" else "corners as traced",
-        if (set.tracking == TrackingMode.TURN) "pivot ${ft(set.solver.pivotRadiusM)} assumed" else "ARCore position",
-        if (unsnapped > 0) "$unsnapped freehand line(s)" else "all lines on edges",
-        "freeze: ${set.freeze.label}",
+        "outline from ${plan.source.name.lowercase()}",
+        if (plan.squared) "corners squared" else "corners as found",
+        "pivot ${ft(c.settings.solver.pivotRadiusM)} assumed",
+        if (inferred > 0) "$inferred wall(s) filled in from the other surface" else "all walls seen directly",
     ).joinToString(" · ")
     return LabResult(UUID.randomUUID().toString(), Method.TRACE, System.currentTimeMillis(), System.currentTimeMillis() - startedMs,
-        c.doc.floor.anchors.size + c.doc.ceiling.anchors.size, plan.corners.map { P(it.x, it.y) }, eyeHeightM = -s.floorZ, note = note)
+        0, plan.corners.map { P(it.x, it.y) }, eyeHeightM = -s.floorZ, note = note)
 }
 
 @Composable
@@ -147,287 +130,229 @@ fun TraceContent(c: TraceController, feed: TraceFeed, onClose: () -> Unit, onSav
     val ctx = LocalContext.current
     val view = LocalView.current
     val owner = LocalLifecycleOwner.current
-    val density = LocalDensity.current
-    c.density = density.density
+    c.density = LocalDensity.current.density
     var showSettings by remember { mutableStateOf(false) }
     var confirmRestart by remember { mutableStateOf(false) }
+    var show3d by remember { mutableStateOf(false) }
 
     DisposableEffect(feed) {
-        c.buzzer = { b ->
-            if (c.settings.haptics) view.performHapticFeedback(when (b) {
-                Buzz.GRAB -> HapticFeedbackConstants.CLOCK_TICK
-                Buzz.CORNER -> HapticFeedbackConstants.CONTEXT_CLICK
-                Buzz.CLOSE -> if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.LONG_PRESS
-                Buzz.REJECT -> if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.REJECT else HapticFeedbackConstants.LONG_PRESS
-            })
-        }
+        val det = AutoDetector(ctx.applicationContext)
+        c.detector = det
         feed.onFrame = { c.onLiveFrame(it) }
         feed.onProblem = { c.problem = it }
         feed.start(ctx, owner)
         view.keepScreenOn = true
-        // the size being typed is placed above the keyboard by this screen itself, so the window must not move
-        val window = (ctx as? Activity)?.window
-        val oldMode = window?.attributes?.softInputMode
-        window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         onDispose {
             feed.stop(); feed.onFrame = null; feed.onProblem = null
-            c.buzzer = {}
+            c.detector = null
             c.dispose()
+            det.close()
             view.keepScreenOn = false
-            if (window != null && oldMode != null) window.setSoftInputMode(oldMode)
         }
     }
-    LaunchedEffect(c.message) { if (c.message != null) { kotlinx.coroutines.delay(3500); c.clearMessage() } }
-    // Back peels one layer at a time before leaving the screen
     BackHandler {
         when {
+            show3d -> show3d = false
             confirmRestart -> confirmRestart = false
             showSettings -> showSettings = false
             !c.back() -> onClose()
         }
     }
 
-    BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
-        val screenH = with(density) { maxHeight.toPx() }
+    Box(Modifier.fillMaxSize().background(Color.Black)) {
         Column(Modifier.fillMaxSize()) {
-            TopBar(c, onClose = onClose, onSettings = { showSettings = true })
-            // the picture is as large as fits; on a short phone it gives up width before the controls give up height
-            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+            // header
+            Row(Modifier.fillMaxWidth().background(Panel).padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("OWL ACOUSTICS", color = OnPanel, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
+                Box(Modifier.padding(horizontal = 8.dp).width(1.dp).height(18.dp).background(Muted))
+                Text("Capture room", color = OnPanel, fontSize = 14.sp, maxLines = 1, modifier = Modifier.weight(1f))
+                IconBox(Glyph.MORE, "Test switches", "trace-settings", 40.dp) { showSettings = true }
+                Spacer(Modifier.width(6.dp))
+                Pill("Restart", "trace-restart", enabled = !c.scan.isEmpty, glyph = Glyph.RESTART) { confirmRestart = true }
+                Spacer(Modifier.width(6.dp))
+                IconBox(Glyph.CLOSE, "Close", "trace-close", 40.dp, onClick = onClose)
+            }
+            // hint and scale
+            Column(Modifier.fillMaxWidth().background(Panel).padding(horizontal = 12.dp).padding(bottom = 6.dp)) {
+                Text(c.hint(), color = OnPanel, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.testTag("trace-coach"))
+                Text(c.scaleTag(), color = if (c.scaleWarning) TraceColors.warn else Muted, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.testTag("trace-scale"))
+            }
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 val vw = minOf(maxWidth, maxHeight * 0.75f)
-                val spare = maxHeight - vw / 0.75f
-                Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    // with room below the picture the Freeze button sits there; otherwise in the picture's corner
-                    Viewport(c, screenH, Modifier.size(vw, vw / 0.75f), freezeInside = spare < 60.dp)
-                    if (spare >= 60.dp) InfoRow(c, Modifier.height(spare))
+                Viewport(c, Modifier.size(vw, vw / 0.75f))
+            }
+            if (c.editing != null) Keypad(c)
+            else {
+                Row(Modifier.fillMaxWidth().background(Panel).padding(horizontal = 8.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    ToolButton("Floor", TraceColors.floor, c.tool == Tool.FLOOR, "trace-floor", Modifier.weight(1f)) { c.pickTool(Tool.FLOOR) }
+                    ToolButton("Wall", TraceColors.wall, c.tool == Tool.WALL, "trace-wall", Modifier.weight(1f)) { c.pickTool(Tool.WALL) }
+                    ToolButton("Ceiling", TraceColors.ceiling, c.tool == Tool.CEILING, "trace-ceiling", Modifier.weight(1f)) { c.pickTool(Tool.CEILING) }
+                    ToolButton("3D", OnPanel, false, "trace-3d", Modifier.weight(1f), enabled = c.solution.plan != null) { show3d = true }
+                }
+                Row(Modifier.fillMaxWidth().background(Panel).padding(horizontal = 8.dp).padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Pill("Undo", "trace-undo", enabled = c.history.canUndo, glyph = Glyph.UNDO, modifier = Modifier.weight(1f)) { c.undo() }
+                    Pill("Redo", "trace-redo", enabled = c.history.canRedo, glyph = Glyph.REDO, modifier = Modifier.weight(1f)) { c.redo() }
+                    Text("Save", color = if (c.canSave) TraceColors.ink else Muted, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1,
+                        modifier = Modifier.weight(1.3f).clip(RoundedCornerShape(12.dp)).background(if (c.canSave) Lime else PanelHi)
+                            .clickable(enabled = c.canSave, onClick = onSave).padding(vertical = 13.dp).testTag("trace-save"), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 }
             }
-            BottomBar(c, onRestart = { confirmRestart = true }, onSave = onSave)
         }
+        if (show3d) Room3d(c) { show3d = false }
         if (showSettings) SettingsPanel(c) { showSettings = false }
-        if (confirmRestart) ConfirmCard(
-            title = "Start over?", body = "This clears the floor and ceiling lines and typed sizes. Undo brings them back.",
-            confirm = "Start over", onConfirm = { c.restart(); confirmRestart = false }, onCancel = { confirmRestart = false })
+        if (confirmRestart) ConfirmCard("Restart this room?", "Clear the capture? Undo can bring it back.", "Restart",
+            onConfirm = { c.restart(); confirmRestart = false }, onCancel = { confirmRestart = false })
     }
 }
 
 @Composable
-private fun TopBar(c: TraceController, onClose: () -> Unit, onSettings: () -> Unit) {
-    Column(Modifier.fillMaxWidth().background(Panel).padding(horizontal = 8.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            RoundButton(Glyph.MORE, "Test switches", "trace-settings", onClick = onSettings)
-            Text(c.coach(), color = OnPanel, fontSize = 14.sp, lineHeight = 17.sp, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp)).background(PanelHi).padding(horizontal = 12.dp, vertical = 7.dp).testTag("trace-coach"))
-            RoundButton(Glyph.CLOSE, "Close", "trace-close", onClick = onClose)
-        }
-        val warn = c.scaleWarning
-        Row(Modifier.clip(RoundedCornerShape(14.dp)).background(if (warn) TraceColors.warn else PanelHi).clickable { c.editCeiling() }
-            .heightIn(min = 30.dp).padding(horizontal = 10.dp, vertical = 5.dp).testTag("trace-scale").semantics(mergeDescendants = true) { contentDescription = "Tap to type the ceiling height" },
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(c.scaleTag(), color = if (warn) TraceColors.ink else OnPanel, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
-            GlyphIcon(Glyph.EDIT, if (warn) TraceColors.ink else OnPanel, Modifier.size(14.dp))
-        }
-    }
-}
-
-@Composable
-private fun Viewport(c: TraceController, screenH: Float, modifier: Modifier, freezeInside: Boolean) {
+private fun Viewport(c: TraceController, modifier: Modifier) {
     val tm = rememberTextMeasurer()
-    var topInRoot by remember { mutableStateOf(0f) }
-    Box(modifier.onGloballyPositioned { topInRoot = it.positionInRoot().y }) {
+    val density = LocalDensity.current
+    Box(modifier) {
         Canvas(Modifier.fillMaxSize().testTag("trace-canvas").semantics { contentDescription = c.describe() }
             .onSizeChanged { c.canvasW = it.width.toFloat(); c.canvasH = it.height.toFloat() }
             .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
-                    c.touchDown(down.position)
-                    val vm = c.viewMap()
-                    val hit = if (vm != null) c.hit(down.position, vm) else Hit.Empty
+                    val hit = c.viewMap()?.let { c.hit(down.position, it) } ?: Hit.Empty
                     var mode = Mode.PENDING
                     while (true) {
-                        val ev = awaitPointerEvent()
+                        val ev = if (mode == Mode.PENDING) withTimeoutOrNull(450) { awaitPointerEvent() } else awaitPointerEvent()
+                        if (ev == null) {
+                            // held still: a point opens its actions, anywhere else starts brushing
+                            if (hit is Hit.Anchor) { c.hold(hit); mode = Mode.DONE } else if (c.tool != Tool.WALL) { c.brushDown(down.position); mode = Mode.BRUSH }
+                            else mode = Mode.DONE
+                            continue
+                        }
                         val pressed = ev.changes.filter { it.pressed }
                         if (pressed.size >= 2) {
-                            if (mode == Mode.STROKE || mode == Mode.DRAG) c.cancelStroke()
+                            if (mode == Mode.BRUSH) c.brushCancel()
                             mode = Mode.TWO
-                            c.twoFinger(ev.calculateZoom(), ev.calculatePan(), ev.calculateCentroid())
+                            c.twoFinger(ev.calculatePan())
                             ev.changes.forEach { it.consume() }
-                        } else if (pressed.size == 1 && mode != Mode.TWO) {
+                        } else if (pressed.size == 1 && (mode == Mode.PENDING || mode == Mode.BRUSH)) {
                             val ch = pressed[0]
-                            if (mode == Mode.PENDING && (ch.position - down.position).getDistance() > viewConfiguration.touchSlop) {
-                                mode = if (hit is Hit.Anchor && !c.dragContinuesLine(hit)) { c.beginDrag(hit); Mode.DRAG }
-                                    else if (c.beginStroke(down.position)) Mode.STROKE else Mode.TWO
+                            if (mode == Mode.PENDING && (ch.position - down.position).getDistance() > viewConfiguration.touchSlop && c.tool != Tool.WALL) {
+                                c.brushDown(down.position); mode = Mode.BRUSH
                             }
-                            if (mode == Mode.STROKE) c.moveStroke(ch.position) else if (mode == Mode.DRAG) c.drag(ch.position)
+                            if (mode == Mode.BRUSH) c.brushMove(ch.position)
                             ch.consume()
                         }
                         if (ev.changes.none { it.pressed }) break
                     }
                     when (mode) {
-                        Mode.PENDING -> c.tap(hit, down.position, down.uptimeMillis)
-                        Mode.STROKE -> if (!c.endStroke()) c.tap(hit, down.position, down.uptimeMillis)
-                        Mode.DRAG -> c.endDrag()
-                        Mode.TWO -> {}
+                        Mode.PENDING -> c.tap(hit)
+                        Mode.BRUSH -> c.brushUp()
+                        else -> {}
                     }
-                    c.touchUp()
                 }
             }) { drawTrace(c, tm) }
 
-        val frozen = c.frozen != null
-        if (freezeInside) FreezeButton(c, compact = true, modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp))
-        if (frozen && c.zoom > 1.01f) Text("%.1f×".format(c.zoom), color = OnPanel, fontSize = 12.sp,
-            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xD912181C)).padding(horizontal = 8.dp, vertical = 3.dp))
+        // brush mode: Add or Subtract
+        if (c.tool != Tool.WALL) Row(Modifier.align(Alignment.TopEnd).padding(8.dp).clip(RoundedCornerShape(22.dp)).background(Color(0xD914181C)).padding(3.dp)) {
+            for (sub in listOf(false, true)) {
+                val on = c.subtract == sub
+                Text(if (sub) "−" else "+", color = if (on) TraceColors.ink else OnPanel, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clip(CircleShape).background(if (!on) Color.Transparent else if (sub) Color(0xFFFF5A4D) else TraceColors.of(c.surface))
+                        .clickable { c.subtract = sub }.size(44.dp).padding(top = 6.dp).testTag(if (sub) "trace-subtract" else "trace-add")
+                        .semantics { contentDescription = if (sub) "Brush takes away" else "Brush adds" },
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            }
+        }
 
-        c.editing?.let { target -> SizeEditor(c, target, topInRoot, screenH) }
+        // actions for a held point
+        c.menu?.let { h ->
+            val at = c.viewMap()?.let { vm -> c.solution.points(h.surface).firstOrNull { it.id == h.id }?.let { vm.project(it.pos) } }
+            val x = with(density) { ((at?.x ?: 0f) + 16.dp.toPx()).coerceIn(0f, (c.canvasW - 170.dp.toPx()).coerceAtLeast(0f)) }
+            val y = with(density) { ((at?.y ?: 0f) - 60.dp.toPx()).coerceIn(0f, (c.canvasH - 130.dp.toPx()).coerceAtLeast(0f)) }
+            Column(Modifier.offset { IntOffset(x.roundToInt(), y.roundToInt()) }.width(160.dp).clip(RoundedCornerShape(12.dp)).background(Panel)
+                .border(1.dp, Muted, RoundedCornerShape(12.dp)).padding(vertical = 6.dp)) {
+                Text("Point actions", color = OnPanel, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp))
+                Text("Remove", color = Color(0xFFFF8A80), fontSize = 15.sp, modifier = Modifier.fillMaxWidth().clickable { c.removeCorner(h) }
+                    .padding(horizontal = 14.dp, vertical = 11.dp).testTag("trace-point-remove"))
+                Text("Close", color = OnPanel, fontSize = 15.sp, modifier = Modifier.fillMaxWidth().clickable { c.menu = null }.padding(horizontal = 14.dp, vertical = 11.dp))
+            }
+        }
     }
 }
 
+/** Number pad for typing a size; replaces the bottom buttons while a size is being edited. */
 @Composable
-private fun FreezeButton(c: TraceController, compact: Boolean, modifier: Modifier = Modifier) {
-    val frozen = c.frozen != null
-    if (c.settings.freeze == FreezeMode.OFF && !frozen) return
-    val fg = if (frozen) TraceColors.ink else OnPanel
-    Row(modifier.clip(RoundedCornerShape(26.dp)).background(if (frozen) Color.White else if (compact) Color(0xD912181C) else PanelHi)
-        .clickable { if (frozen) c.resume() else c.freeze() }.heightIn(min = 48.dp).padding(horizontal = if (compact) 16.dp else 18.dp, vertical = 12.dp)
-        .testTag("trace-freeze").semantics(mergeDescendants = true) { contentDescription = if (frozen) "Resume camera" else "Freeze picture" },
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
-        GlyphIcon(if (frozen) Glyph.PLAY else Glyph.PAUSE, fg, Modifier.size(16.dp))
-        if (!compact) Text(if (frozen) "Resume camera" else "Freeze", color = fg, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1)
-    }
-}
-
-/** The size being typed sits on its line when that is above the keyboard, otherwise it is lifted clear of it. */
-@Composable
-private fun SizeEditor(c: TraceController, target: EditTarget, viewportTop: Float, screenH: Float) {
-    val density = LocalDensity.current
-    val focus = remember { FocusRequester() }
-    var value by remember(target) { mutableStateOf(c.editingText().let { TextFieldValue(it, TextRange(0, it.length)) }) }
-    var error by remember(target) { mutableStateOf<String?>(null) }
-    val seg = target as? EditTarget.Segment
-    val box = seg?.let { s -> c.labels.firstOrNull { it.seg.surface == s.surface && it.seg.a == s.a && it.seg.b == s.b } }
-    val w = with(density) { 190.dp.toPx() }; val h = with(density) { 84.dp.toPx() }
-    val safeBottom = screenH * 0.46f - viewportTop // the keyboard may take the lower half of the screen
-    val cx = (box?.rect?.center?.x ?: (c.canvasW / 2)).coerceIn(w / 2 + 8, (c.canvasW - w / 2 - 8).coerceAtLeast(w / 2 + 8))
-    val cy = (box?.rect?.center?.y ?: (h / 2 + 8)).coerceIn(h / 2 + 8, (safeBottom - h / 2).coerceAtLeast(h / 2 + 8))
-    val color = if (seg != null) TraceColors.of(seg.surface) else TraceColors.ceiling
-    Column(Modifier.offset { IntOffset((cx - w / 2).roundToInt(), (cy - h / 2).roundToInt()) }.width(190.dp)
-        .clip(RoundedCornerShape(12.dp)).background(Color.White).border(3.dp, color, RoundedCornerShape(12.dp)).padding(horizontal = 10.dp, vertical = 8.dp)) {
+private fun Keypad(c: TraceController) {
+    var text by remember(c.editing) { mutableStateOf(c.editingText()) }
+    var error by remember(c.editing) { mutableStateOf<String?>(null) }
+    fun key(k: String) { text += k; error = null }
+    Column(Modifier.fillMaxWidth().background(Panel).padding(horizontal = 10.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(if (seg != null) "Length" else "Ceiling height", color = Color(0xFF51606A), fontSize = 11.sp, modifier = Modifier.weight(1f))
-            Box(Modifier.size(28.dp).clip(CircleShape).clickable { c.cancelEdit() }.testTag("trace-edit-cancel").semantics { contentDescription = "Cancel" }, contentAlignment = Alignment.Center) {
-                GlyphIcon(Glyph.CLOSE, Color(0xFF51606A), Modifier.size(14.dp))
-            }
+            Text(c.editingTitle(), color = OnPanel, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Pill("Cancel", "trace-edit-cancel") { c.cancelEdit() }
         }
-        BasicTextField(value, { value = it; error = null }, singleLine = true,
-            textStyle = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace, color = TraceColors.ink),
-            cursorBrush = SolidColor(TraceColors.ink),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = { error = c.commitEdit(value.text) }),
-            modifier = Modifier.fillMaxWidth().focusRequester(focus).testTag("trace-edit"))
-        val hint = error ?: LengthFormat.interpretation(value.text, DisplayUnits.IMPERIAL) ?: "e.g. 11 6 1/4 · empty clears"
-        Text(hint, color = if (error != null) Color(0xFFC5221F) else Color(0xFF51606A), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-    }
-    LaunchedEffect(target) { runCatching { focus.requestFocus() } }
-}
-
-@Composable
-private fun InfoRow(c: TraceController, modifier: Modifier) {
-    val tm = rememberTextMeasurer()
-    val plan = c.solution.plan
-    Row(modifier.fillMaxWidth().background(Panel).padding(horizontal = 10.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        BoxWithConstraints(Modifier.weight(1f)) {
-            if (maxHeight < 56.dp) return@BoxWithConstraints
-            val side = minOf(maxHeight, 132.dp)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Canvas(Modifier.size(side).clip(RoundedCornerShape(10.dp)).background(PanelHi).testTag("trace-plan")) {
-                    val pts = plan?.corners ?: return@Canvas
-                    if (pts.size < 2) return@Canvas
-                    val pad = 14 * density
-                    val minX = pts.minOf { it.x }; val maxX = pts.maxOf { it.x }; val minY = pts.minOf { it.y }; val maxY = pts.maxOf { it.y }
-                    val s = minOf((size.width - 2 * pad) / (maxX - minX).coerceAtLeast(0.2), (size.height - 2 * pad) / (maxY - minY).coerceAtLeast(0.2)).toFloat()
-                    val ox = (size.width - (maxX - minX).toFloat() * s) / 2; val oy = (size.height - (maxY - minY).toFloat() * s) / 2
-                    fun map(x: Double, y: Double) = Offset(ox + ((x - minX) * s).toFloat(), size.height - oy - ((y - minY) * s).toFloat())
-                    val path = Path().apply { pts.forEachIndexed { i, p -> val o = map(p.x, p.y); if (i == 0) moveTo(o.x, o.y) else lineTo(o.x, o.y) }; if (plan.closed) close() }
-                    if (plan.closed) drawPath(path, TraceColors.floor.copy(alpha = 0.16f))
-                    drawPath(path, TraceColors.floor, style = Stroke(2.5f * density))
-                    // where the phone is and which way it faces
-                    c.frame?.let { f ->
-                        val pose = c.poseOf(f); val hd = pose.heading()
-                        val at = map(pose.t.x, pose.t.y)
-                        drawCircle(Color.White, 3.2f * density, at)
-                        drawLine(Color.White, at, Offset(at.x + (hd.x * 12 * density).toFloat(), at.y - (hd.y * 12 * density).toFloat()), 2f * density)
-                    }
-                    if (c.sizesVisible && side >= 96.dp) for (i in plan.lengths.indices) {
-                        val a = pts[i]; val b = pts[(i + 1) % pts.size]
-                        val l = tm.measure((if (c.solution.calibrated) "" else "~") + ft(plan.lengths[i]), TextStyle(fontSize = 9.sp, color = Color.White, background = Color(0xCC12181C)))
-                        val m = map((a.x + b.x) / 2, (a.y + b.y) / 2)
-                        drawText(l, topLeft = Offset((m.x - l.size.width / 2f).coerceIn(0f, size.width - l.size.width), (m.y - l.size.height / 2f).coerceIn(0f, size.height - l.size.height)))
-                    }
+        Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Color.White).padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(text.ifEmpty { " " } + "▏", color = TraceColors.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Monospace,
+                modifier = Modifier.weight(1f).testTag("trace-edit"))
+            Text(error ?: LengthFormat.interpretation(text, DisplayUnits.IMPERIAL) ?: "feet · e.g. 4.5 or 11 6 1/4", color = if (error != null) Color(0xFFC5221F) else Color(0xFF51606A),
+                fontSize = 12.sp, maxLines = 1)
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.weight(3f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (row in listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"), listOf(".", "0", "⌫"))) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    for (k in row) Key(k, Modifier.weight(1f)) { if (k == "⌫") { text = text.dropLast(1); error = null } else key(k) }
                 }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    val f = c.doc.floor; val ce = c.doc.ceiling
-                    if (side >= 104.dp) {
-                        Text("Floor: " + status(f.corners.size, f.closed), color = TraceColors.floor, fontSize = 12.sp, maxLines = 1)
-                        Text("Ceiling: " + status(ce.corners.size, ce.closed), color = TraceColors.ceiling, fontSize = 12.sp, maxLines = 1)
-                        val area = plan?.area
-                        if (c.frame?.lensGuessed == true) Text("Lens data missing: sizes less reliable", color = TraceColors.warn, fontSize = 11.sp, maxLines = 1)
-                        else if (area != null && c.sizesVisible) Text((if (c.solution.calibrated) "" else "~") + "%.0f sq ft".format(area / 0.09290304), color = OnPanel, fontSize = 12.sp)
-                        Spacer(Modifier.height(4.dp))
-                    }
-                    FreezeButton(c, compact = false, modifier = Modifier.fillMaxWidth())
+            }
+            Column(Modifier.weight(1.3f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Key("space", Modifier.weight(1f), small = true) { key(" ") }
+                    Key("/", Modifier.weight(1f)) { key("/") }
                 }
+                Key("Clear", Modifier.fillMaxWidth(), small = true) { text = ""; error = null }
+                Text("Done", color = TraceColors.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Lime).clickable { error = c.commitEdit(text) }
+                        .heightIn(min = 94.dp).padding(top = 34.dp).testTag("trace-edit-done"))
             }
         }
     }
 }
 
-private fun status(corners: Int, closed: Boolean) = when {
-    closed -> "closed · $corners corners"
-    corners == 0 -> "not started"
-    else -> "open · $corners point" + (if (corners == 1) "" else "s")
+@Composable
+private fun Key(label: String, modifier: Modifier, small: Boolean = false, onClick: () -> Unit) {
+    Text(label, color = OnPanel, fontSize = if (small) 13.sp else 20.sp, fontWeight = FontWeight.Medium, textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 1,
+        modifier = modifier.clip(RoundedCornerShape(10.dp)).background(PanelHi).clickable(onClick = onClick).heightIn(min = 44.dp).padding(top = if (small) 13.dp else 8.dp))
 }
 
 @Composable
-private fun BottomBar(c: TraceController, onRestart: () -> Unit, onSave: () -> Unit) {
-    BoxWithConstraints(Modifier.fillMaxWidth().background(Panel)) {
-        // narrow phones get slightly smaller buttons so the row never wraps or scrolls
-        val tight = maxWidth < 380.dp
-        val round = if (tight) 46.dp else 52.dp
-        val pad = if (tight) 10.dp else 14.dp
-        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween) {
-            RoundButton(Glyph.UNDO, "Undo", "trace-undo", enabled = c.history.canUndo, size = round) { c.undo() }
-            RoundButton(Glyph.REDO, "Redo", "trace-redo", enabled = c.history.canRedo, size = round) { c.redo() }
-            Row(Modifier.clip(RoundedCornerShape(26.dp)).background(PanelHi).padding(3.dp)) {
-                for (s in listOf(Surface.FLOOR, Surface.CEILING)) {
-                    val on = c.surface == s
-                    val name = if (s == Surface.FLOOR) "Floor" else "Ceiling"
-                    Text(name, color = if (on) TraceColors.ink else OnPanel, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false,
-                        modifier = Modifier.clip(RoundedCornerShape(23.dp)).background(if (on) TraceColors.of(s) else Color.Transparent)
-                            .clickable { c.pickSurface(s) }.heightIn(min = 46.dp).padding(horizontal = pad, vertical = 13.dp)
-                            .testTag("trace-" + name.lowercase()).semantics { contentDescription = "$name boundary" + if (on) ", selected" else "" })
-                }
-            }
-            RoundButton(Glyph.RESTART, "Start over", "trace-restart", enabled = !c.doc.isEmpty, size = round, onClick = onRestart)
-            val can = c.canSave
-            Text("Save", color = if (can) TraceColors.ink else Muted, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false,
-                modifier = Modifier.clip(RoundedCornerShape(26.dp)).background(if (can) Color.White else PanelHi).clickable(enabled = can, onClick = onSave)
-                    .heightIn(min = round).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = pad, vertical = 12.dp).testTag("trace-save"))
-        }
+private fun ToolButton(label: String, color: Color, on: Boolean, tag: String, modifier: Modifier, enabled: Boolean = true, onClick: () -> Unit) {
+    Row(modifier.clip(RoundedCornerShape(12.dp)).background(if (on) color else PanelHi).clickable(enabled = enabled, onClick = onClick)
+        .heightIn(min = 46.dp).padding(horizontal = 8.dp).testTag(tag).semantics { contentDescription = label + if (on) ", selected" else "" },
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+        if (!on) { Box(Modifier.size(12.dp).border(2.dp, if (enabled) color else Muted, RoundedCornerShape(3.dp))); Spacer(Modifier.width(6.dp)) }
+        Text(label, color = if (on) TraceColors.ink else if (enabled) OnPanel else Muted, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 1)
     }
 }
 
 @Composable
-private fun RoundButton(glyph: Glyph, label: String, tag: String, enabled: Boolean = true, size: androidx.compose.ui.unit.Dp = 52.dp, onClick: () -> Unit) {
-    Box(Modifier.size(size).clip(CircleShape).background(PanelHi).clickable(enabled = enabled, onClick = onClick).testTag(tag).semantics { contentDescription = label },
-        contentAlignment = Alignment.Center) {
-        GlyphIcon(glyph, if (enabled) OnPanel else Color(0xFF5B666D), Modifier.size(24.dp))
+private fun Pill(label: String, tag: String, enabled: Boolean = true, glyph: Glyph? = null, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val fg = if (enabled) OnPanel else Color(0xFF5B666D)
+    Row(modifier.clip(RoundedCornerShape(12.dp)).border(1.dp, fg, RoundedCornerShape(12.dp)).clickable(enabled = enabled, onClick = onClick)
+        .heightIn(min = 40.dp).padding(horizontal = 12.dp).testTag(tag).semantics { contentDescription = label },
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+        if (glyph != null) { GlyphIcon(glyph, fg, Modifier.size(16.dp)); Spacer(Modifier.width(6.dp)) }
+        Text(label, color = fg, fontSize = 14.sp, maxLines = 1)
     }
 }
 
-private enum class Glyph { UNDO, REDO, RESTART, CLOSE, MORE, PLAY, PAUSE, EDIT }
+@Composable
+private fun IconBox(glyph: Glyph, label: String, tag: String, size: Dp, onClick: () -> Unit) {
+    Box(Modifier.size(size).clip(CircleShape).background(PanelHi).clickable(onClick = onClick).testTag(tag).semantics { contentDescription = label }, contentAlignment = Alignment.Center) {
+        GlyphIcon(glyph, OnPanel, Modifier.size(size * 0.45f))
+    }
+}
 
-/** Icons drawn as shapes, so they look the same on every phone (no missing-symbol boxes). */
+private enum class Glyph { UNDO, REDO, RESTART, CLOSE, MORE }
+
+/** Icons drawn as shapes, so they look the same on every phone. */
 @Composable
 private fun GlyphIcon(g: Glyph, color: Color, modifier: Modifier) {
     Canvas(modifier) {
@@ -448,34 +373,88 @@ private fun GlyphIcon(g: Glyph, color: Color, modifier: Modifier) {
             }
             Glyph.CLOSE -> { drawLine(color, p(0.22f, 0.22f), p(0.78f, 0.78f), st.width, StrokeCap.Round); drawLine(color, p(0.78f, 0.22f), p(0.22f, 0.78f), st.width, StrokeCap.Round) }
             Glyph.MORE -> for (y in listOf(0.22f, 0.5f, 0.78f)) drawCircle(color, w * 0.085f, p(0.5f, y))
-            Glyph.PLAY -> drawPath(Path().apply { moveTo(w * 0.24f, w * 0.14f); lineTo(w * 0.86f, w * 0.5f); lineTo(w * 0.24f, w * 0.86f); close() }, color)
-            Glyph.PAUSE -> { drawRect(color, p(0.20f, 0.14f), Size(w * 0.22f, w * 0.72f)); drawRect(color, p(0.58f, 0.14f), Size(w * 0.22f, w * 0.72f)) }
-            Glyph.EDIT -> {
-                drawLine(color, p(0.30f, 0.70f), p(0.76f, 0.24f), w * 0.20f, StrokeCap.Butt)
-                drawPath(Path().apply { moveTo(w * 0.12f, w * 0.88f); lineTo(w * 0.20f, w * 0.62f); lineTo(w * 0.38f, w * 0.80f); close() }, color)
-            }
         }
+    }
+}
+
+/** The room as a model you can turn and zoom. Opens only when asked for; nothing here places points. */
+@Composable
+private fun Room3d(c: TraceController, onBack: () -> Unit) {
+    val tm = rememberTextMeasurer()
+    var yaw by remember { mutableFloatStateOf(0.6f) }
+    var pitch by remember { mutableFloatStateOf(0.5f) }
+    var zoom by remember { mutableFloatStateOf(1f) }
+    Column(Modifier.fillMaxSize().background(Color(0xFFF4F1EA)).clickable(enabled = false) {}.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Room model", color = TraceColors.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text(if (c.solution.calibrated) "Sizes from your measurement" else "Sizes are estimates until you type one", color = Color(0xFF51606A), fontSize = 13.sp)
+        Canvas(Modifier.weight(1f).fillMaxWidth().testTag("trace-3d-canvas").pointerInput(Unit) {
+            detectTransformGestures { _, pan, z, _ ->
+                yaw += pan.x * 0.008f; pitch = (pitch + pan.y * 0.006f).coerceIn(0.1f, 1.45f); zoom = (zoom * z).coerceIn(0.5f, 4f)
+            }
+        }) {
+            val plan = c.solution.plan ?: return@Canvas
+            val pts = plan.corners
+            if (pts.size < 2) return@Canvas
+            val cx = pts.sumOf { it.x } / pts.size; val cy = pts.sumOf { it.y } / pts.size
+            val h = c.solution.ceilingHeight
+            val reach = pts.maxOf { kotlin.math.hypot(it.x - cx, it.y - cy) }.coerceAtLeast(0.5)
+            val s = (minOf(size.width, size.height) * 0.42f / (reach + h * 0.3)).toFloat() * zoom
+            fun proj(x: Double, y: Double, z: Double): Pair<Offset, Double> {
+                val dx = x - cx; val dy = y - cy; val dz = z - h / 2
+                val rx = dx * cos(yaw) - dy * sin(yaw); val ry = dx * sin(yaw) + dy * cos(yaw)
+                val sy = ry * sin(pitch) - dz * cos(pitch)
+                return Offset(size.width / 2 + (rx * s).toFloat(), size.height / 2 + (sy * s).toFloat()) to (ry * cos(pitch) + dz * sin(pitch))
+            }
+            fun poly(v: List<Offset>, fill: Color, line: Color) {
+                val path = Path().apply { v.forEachIndexed { i, o -> if (i == 0) moveTo(o.x, o.y) else lineTo(o.x, o.y) }; close() }
+                drawPath(path, fill); drawPath(path, line, style = Stroke(2f * density))
+            }
+            if (plan.closed) poly(pts.map { proj(it.x, it.y, 0.0).first }, TraceColors.floor, TraceColors.ink)
+            val n = pts.size
+            val walls = (0 until if (plan.closed) n else n - 1).map { i ->
+                val a = pts[i]; val b = pts[(i + 1) % n]
+                val quad = listOf(proj(a.x, a.y, 0.0), proj(b.x, b.y, 0.0), proj(b.x, b.y, h), proj(a.x, a.y, h))
+                Triple(i, quad.map { it.first }, quad.sumOf { it.second } / 4)
+            }.sortedByDescending { it.third }
+            // far walls first; the nearest ones are see-through so the inside stays visible
+            for ((k, w) in walls.withIndex()) poly(w.second, TraceColors.wall.copy(alpha = if (k < walls.size / 2) 0.95f else 0.25f), TraceColors.ink.copy(alpha = 0.6f))
+            if (plan.closed) poly(pts.map { proj(it.x, it.y, h).first }, TraceColors.ceiling.copy(alpha = 0.35f), TraceColors.ink.copy(alpha = 0.5f))
+            val pre = if (c.solution.calibrated) "" else "~"
+            for (w in walls) {
+                val l = tm.measure(pre + ft(plan.lengths[w.first]), TextStyle(fontSize = 12.sp, color = TraceColors.ink, fontWeight = FontWeight.Bold, background = Color(0xE6FFFFFF)))
+                val m = (w.second[0] + w.second[1]) / 2f
+                drawText(l, topLeft = Offset(m.x - l.size.width / 2f, m.y - l.size.height / 2f))
+            }
+            val hl = tm.measure(pre + ft(h) + " high", TextStyle(fontSize = 12.sp, color = TraceColors.ink, fontWeight = FontWeight.Bold, background = Color(0xE6FFFFFF)))
+            val e = walls.first().second
+            val hm = (e[0] + e[3]) / 2f
+            drawText(hl, topLeft = Offset(hm.x - hl.size.width / 2f, hm.y - hl.size.height / 2f))
+        }
+        Text("Drag to rotate • Pinch to zoom", color = Color(0xFF51606A), fontSize = 13.sp, modifier = Modifier.align(Alignment.CenterHorizontally))
+        Text("←  Back to drawing", color = TraceColors.ink, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).border(1.5.dp, TraceColors.ink, RoundedCornerShape(12.dp)).clickable(onClick = onBack)
+                .padding(vertical = 14.dp).testTag("trace-3d-back"))
     }
 }
 
 @Composable
 private fun ConfirmCard(title: String, body: String, confirm: String, onConfirm: () -> Unit, onCancel: () -> Unit) {
     Box(Modifier.fillMaxSize().background(Color(0xB3000000)).clickable(onClick = onCancel), contentAlignment = Alignment.Center) {
-        Column(Modifier.widthIn(max = 320.dp).padding(24.dp).clip(RoundedCornerShape(16.dp)).background(Panel).clickable(enabled = false) {}.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(title, color = OnPanel, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Text(body, color = Muted, fontSize = 14.sp)
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
-                Text("Cancel", color = OnPanel, fontSize = 15.sp, modifier = Modifier.clip(RoundedCornerShape(20.dp)).clickable(onClick = onCancel).padding(horizontal = 16.dp, vertical = 12.dp).testTag("trace-confirm-cancel"))
-                Spacer(Modifier.width(6.dp))
-                Text(confirm, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(RoundedCornerShape(20.dp)).background(Color(0xFFD93025)).clickable(onClick = onConfirm).padding(horizontal = 16.dp, vertical = 12.dp).testTag("trace-confirm-ok"))
+        Column(Modifier.widthIn(max = 320.dp).padding(24.dp).clip(RoundedCornerShape(16.dp)).background(Color.White).clickable(enabled = false) {}.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(title, color = TraceColors.ink, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(body, color = Color(0xFF51606A), fontSize = 14.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Cancel", color = TraceColors.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clip(RoundedCornerShape(10.dp))
+                    .border(1.dp, TraceColors.ink, RoundedCornerShape(10.dp)).clickable(onClick = onCancel).padding(horizontal = 22.dp, vertical = 12.dp).testTag("trace-confirm-cancel"))
+                Text(confirm, color = TraceColors.ink, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(Lime)
+                    .clickable(onClick = onConfirm).padding(horizontal = 22.dp, vertical = 12.dp).testTag("trace-confirm-ok"))
             }
         }
     }
 }
 
-/** Lab switches. Everything here exists so the owner can compare options on a phone. */
+/** Lab switches, for comparing options on a phone. */
 @Composable
 private fun SettingsPanel(c: TraceController, onClose: () -> Unit) {
     val s = c.settings
@@ -484,51 +463,31 @@ private fun SettingsPanel(c: TraceController, onClose: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 12.dp).testTag("trace-settings-panel"), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Test switches", color = OnPanel, fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Text("Done", color = TraceColors.ink, fontSize = 14.sp, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clip(RoundedCornerShape(18.dp)).background(Color.White).clickable(onClick = onClose).padding(horizontal = 14.dp, vertical = 8.dp).testTag("trace-settings-done"))
+                Pill("Done", "trace-settings-done", onClick = onClose)
             }
-            Choice("Tracking", TrackingMode.entries, s.tracking, { it.label }, enabled = { it == TrackingMode.TURN }) { c.updateSettings(s.copy(tracking = it)) }
-            Text("Walk (ARCore) is not built yet.", color = Muted, fontSize = 11.sp)
-            Choice("Picture freezes", FreezeMode.entries, s.freeze, { it.label }) { c.updateSettings(s.copy(freeze = it)) }
-            Toggle("Mesh grows while drawing", "Off: surfaces appear when the boundary closes", s.fillWhileDrawing) { c.updateSettings(s.copy(fillWhileDrawing = it)) }
-            Toggle("Use the ceiling outline when the floor is hidden", null, s.solver.outlineFromCeiling) { c.updateSettings(s.copy(solver = s.solver.copy(outlineFromCeiling = it))) }
+            Toggle("Find floor, walls and ceiling automatically", "Off: only the brush marks them", s.autoDetect) { c.updateSettings(s.copy(autoDetect = it)) }
+            Toggle("Fill hidden floor edges from the ceiling", "And hidden ceiling edges from the floor", s.borrowAcross) { c.updateSettings(s.copy(borrowAcross = it)) }
             Toggle("Square up corners within 10°", null, s.solver.squareCorners) { c.updateSettings(s.copy(solver = s.solver.copy(squareCorners = it))) }
-            Toggle("Lowest edge at floor, highest at ceiling", "For baseboards and mouldings", s.preferOuterEdge) { c.updateSettings(s.copy(preferOuterEdge = it)) }
             Toggle("Show ~estimates before a size is typed", null, s.showEstimates) { c.updateSettings(s.copy(showEstimates = it)) }
-            Toggle("Haptics", null, s.haptics) { c.updateSettings(s.copy(haptics = it)) }
+            Toggle("Widest lens (0.6×)", "Takes effect the next time this screen opens", s.widestLens) { c.updateSettings(s.copy(widestLens = it)) }
             val inches = s.solver.pivotRadiusM / 0.0254
             Text("Phone held %.0f in from the point you turn around".format(inches), color = OnPanel, fontSize = 13.sp)
             Slider(inches.toFloat(), { c.updateSettings(s.copy(solver = s.solver.copy(pivotRadiusM = it.roundToInt() * 0.0254))) }, valueRange = 0f..24f,
                 colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = TraceColors.floor, inactiveTrackColor = PanelHi),
                 modifier = Modifier.height(32.dp).testTag("trace-pivot"))
-            Text("Turn while watching a traced line. If it slides off the edge, change this until it stays.", color = Muted, fontSize = 11.sp)
+            Text("If the boundary slides off the walls as you turn, change this until it stays.", color = Muted, fontSize = 11.sp)
         }
     }
 }
 
 @Composable
 private fun Toggle(title: String, sub: String?, value: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().heightIn(min = 38.dp).clickable { onChange(!value) }, verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 40.dp).clickable { onChange(!value) }, verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(title, color = OnPanel, fontSize = 13.sp)
             if (sub != null) Text(sub, color = Muted, fontSize = 11.sp)
         }
         Switch(value, onChange, modifier = Modifier.height(30.dp), colors = SwitchDefaults.colors(
             checkedTrackColor = TraceColors.floor, checkedThumbColor = Color.White, uncheckedTrackColor = PanelHi, uncheckedThumbColor = Muted, uncheckedBorderColor = Muted))
-    }
-}
-
-@Composable
-private fun <T> Choice(title: String, options: List<T>, value: T, label: (T) -> String, enabled: (T) -> Boolean = { true }, onPick: (T) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text(title, color = OnPanel, fontSize = 13.sp)
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            for (o in options) {
-                val on = o == value; val ok = enabled(o)
-                Text(label(o), color = if (on) TraceColors.ink else if (ok) OnPanel else Color(0xFF5B666D), fontSize = 12.sp, maxLines = 1,
-                    modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(if (on) Color.White else PanelHi).clickable(enabled = ok) { onPick(o) }
-                        .padding(horizontal = 10.dp, vertical = 8.dp))
-            }
-        }
     }
 }

@@ -84,18 +84,16 @@ Not part of the main app's acceptance rows. It exists so the owner can compare c
 | Item | Status | Notes |
 |---|---|---|
 | Methods 1, 2, 4, 5, 6, 7 and the tape-measure scorecard | IMPLEMENTED | Maths BUILD-TESTED on the JVM; screens never run on a device. |
-| Method 8 · Camera trace (2026-11-10, E-012) | BUILD-TESTED | Trace floor and ceiling lines on a frozen camera view; lines cling to edges and stay pinned; one-foot mesh; sizes typed on the picture; undo/redo, restart, save. 19 geometry tests + 3 Robolectric rendered tests that drive the real screen with a simulated room. **Not run on a phone**: camera, motion sensor, haptics, keyboard and real-room edge snapping are unverified. |
+| Method 8 · Camera scan (2026-11-11, E-013; replaces the 0.2.0 tracing screen) | IMPLEMENTED | Live automatic floor/wall/ceiling detection, Add/Subtract brush, anchors, number pad, 3D model, widest lens. Geometry model BUILD-TESTED (JVM); the screen, detection, lens choice and brush have **no rendered tests and have not been verified on a phone**. Lab 0.3.0. |
 | Method 8 · Walk mode (ARCore tracking) | PLANNED | Shown disabled in the test switches. Solver accepts tracked positions (unit-tested); the ARCore camera feed is not written. |
 | Method 8 · door/window heights | BLOCKED | Owner decision U-06 not answered. |
 | Method 8 · hand-off to the main app's 2D builder | PLANNED | The lab saves to its own scorecard only. |
 | Method 3 · server video analysis | EXCLUDED-DEFERRED | Paused by the owner. |
 
-Lab artifact (2026-11-10): `dist/OWL-Capture-Lab-0.2.0-lab-debug.apk` (not committed) · package
-`com.owlacoustics.capturelab.dev` · versionCode 2 · versionName 0.2.0-lab · arm64-v8a · debug-signed, signer certificate
-SHA-256 `a574fd584735a1669087c1a0f5541b91f512f6d3def2243313324d929ffc8fb3` · APK SHA-256
-`84470a7c6dd19290a3d6d2474dc320de72fe97e13ca04941675d08f0539796f5` (rebuilding gives different bytes). Built from the
-revision that contains this file. Checks at that revision: 123 domain tests, 7 main-app rendered tests, 3 lab
-rendered tests, all passing; lab lint 0 errors.
+Lab artifact (2026-11-11): `dist/OWL-Capture-Lab-0.3.0-lab-debug.apk` (not committed) · package
+`com.owlacoustics.capturelab.dev` · versionCode 3 · versionName 0.3.0-lab · arm64-v8a · debug-signed (same key as before) ·
+APK SHA-256 `8c1c754689055cf4ee88964763d9022b656a32fed41cb57667120aaeab1adcab` (rebuilding gives different bytes). Built from the revision that contains this file.
+Checks at that revision: domain tests passing, lab lint 0 errors; the lab has no rendered tests.
 
 Simulated figures for method 8 (not device measurements): with 0.3° of tracing error per point, the worst wall after
 one typed wall was within 2.3 in in 95% of 400 simulated runs (largest 4.1 in). With only the assumed 8 ft ceiling the

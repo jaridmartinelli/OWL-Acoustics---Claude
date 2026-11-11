@@ -17,6 +17,7 @@ earlier ones, as "Owner instruction/request" entries in the engineering log).
 | U-04 | 2026-11-10 | Scale: the ceiling is assumed 8 ft unless specified, so there is always a base. A typed measurement defines the grid and recalibrates the whole room at once. Once one measurement besides the ceiling default is entered, all measurements show on the grid, updating while the boundary is drawn. Target: within ±6 in. | Owner message |
 | U-05 | 2026-11-10 | Accepted proposals: a typed size beats the assumed ceiling and the app reports and flags the ceiling it implies; ask for the longest wall first; typed sizes are marked locked. Touch-and-feel choices are delegated to engineering, to be made from research (`docs/CAPTURE_TRACE_UX_RESEARCH.md`). | "I like the changes you suggested"; "handle the touch and feel using research" |
 | U-06 | 2026-11-10 | **Open (not answered):** how door and window heights are captured in the camera view (+ Door / Window button, Wall mode, floor markers, or 2D builder only). Not built. Marker points already give positions along a wall. | Asked twice; no answer yet |
+| U-07 | 2026-11-11 | After trying lab 0.2.0 the owner replaced line tracing. The app must find floor, walls and ceiling by itself, live, with no freezing and no Start button; nothing has to be "closed" for the mesh to show. Touch is a correction brush like Photoshop's Quick Selection: Add by default, a toggle to Subtract, and Subtract strokes are remembered so Add does not take that area again; no threshold setting. Hidden floor edges are worked out from room geometry (delegated). Large square anchors at corners. Widest lens (0.6×) by default. Layout follows the owner's mockups: header with Restart, Floor / Wall / Ceiling / 3D, Undo / Redo / Save, number pad on the measurement, hold a point for actions, 3D model only on request. Doors and windows left out, except as a possible 6' 8" scale reference. Fable usage only on method 8; no mockups, stills or simulated pictures. | Owner messages, mockups, screen recording |
 
 ## 2. Routine defaults carried from the brief (BRIEF)
 
@@ -99,6 +100,20 @@ material owner decision.
   `com.owlacoustics.capturelab.dev`) with methods 1, 2 (model-free floor-line variant), 4, 5, 6 and 7 plus a
   tape-measure scorecard; method 3 paused by owner. Depth model: Depth Anything V2 Small int8 ONNX (Apache-2.0),
   downloaded at build time with checksum. arm64-v8a only. Portrait lock is intentional (tilt maths assumes upright).
+- E-013 (2026-11-11) **Camera scan, lab 0.3.0 (U-07).** Replaces the 0.2.0 tracing screen.
+  - **Model:** per surface, one boundary distance for each degree of direction around the user, holding automatic
+    readings plus the brush's limits (Add: reaches at least here; Subtract: ends before here; either may pin an edge).
+    Brush limits always win and persist, so later readings and strokes respect them. Straight walls and corner
+    anchors are fitted from these and fed to the E-012 solver (scale rules unchanged).
+  - **Automatic detection:** the on-device depth model already in the lab (Depth Anything V2 Small) plus gravity:
+    find the depth scaling under which the lower picture is a level floor, give every pixel a height, and mark the
+    floor's end as a wall only where the upright surface rises to about camera height (so beds and couches are
+    skipped); the ceiling starts where the wall gives way overhead. Boundaries are then moved onto picture edges.
+  - **Hidden edges:** short gaps are bridged; longer ones are borrowed from the other surface (same outline, one scale
+    factor) and drawn dashed.
+  - **Not built:** walking with ARCore (stand-and-turn only); door as a scale reference; dragging a corner (corners can
+    be removed, the brush moves walls). **No rendered tests** for this screen (owner instruction); one JVM test covers
+    the model. Automatic detection, lens selection and the brush are unverified on a phone.
 - E-012 (2026-11-10) **Camera trace module (U-01…U-05)**, built as method 8 in the Capture Lab (`lab/.../trace`, maths in
   `domain/.../trace`). Lab v0.2.0. Research and predictions: `docs/CAPTURE_TRACE_UX_RESEARCH.md`; stills from the
   rendered test: `docs/capture-trace/`.
