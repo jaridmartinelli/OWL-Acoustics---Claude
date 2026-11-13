@@ -18,6 +18,7 @@ earlier ones, as "Owner instruction/request" entries in the engineering log).
 | U-05 | 2026-11-10 | Accepted proposals: a typed size beats the assumed ceiling and the app reports and flags the ceiling it implies; ask for the longest wall first; typed sizes are marked locked. Touch-and-feel choices are delegated to engineering, to be made from research (`docs/CAPTURE_TRACE_UX_RESEARCH.md`). | "I like the changes you suggested"; "handle the touch and feel using research" |
 | U-06 | 2026-11-10 | **Open (not answered):** how door and window heights are captured in the camera view (+ Door / Window button, Wall mode, floor markers, or 2D builder only). Not built. Marker points already give positions along a wall. | Asked twice; no answer yet |
 | U-07 | 2026-11-11 | After trying lab 0.2.0 the owner replaced line tracing. The app must find floor, walls and ceiling by itself, live, with no freezing and no Start button; nothing has to be "closed" for the mesh to show. Touch is a correction brush like Photoshop's Quick Selection: Add by default, a toggle to Subtract, and Subtract strokes are remembered so Add does not take that area again; no threshold setting. Hidden floor edges are worked out from room geometry (delegated). Large square anchors at corners. Widest lens (0.6×) by default. Layout follows the owner's mockups: header with Restart, Floor / Wall / Ceiling / 3D, Undo / Redo / Save, number pad on the measurement, hold a point for actions, 3D model only on request. Doors and windows left out, except as a possible 6' 8" scale reference. Fable usage only on method 8; no mockups, stills or simulated pictures. | Owner messages, mockups, screen recording |
+| U-08 | 2026-11-13 | The owner sent the 0.2.0 tracing still sheet as "how it is supposed to be" and, offered three options, chose to bring line tracing back **as its own method beside the camera scan**, keeping the scan (not replacing it). The tracing screen follows U-01…U-05 as built in 0.2.0. | Owner messages ("1.") |
 
 ## 2. Routine defaults carried from the brief (BRIEF)
 
@@ -100,6 +101,17 @@ material owner decision.
   `com.owlacoustics.capturelab.dev`) with methods 1, 2 (model-free floor-line variant), 4, 5, 6 and 7 plus a
   tape-measure scorecard; method 3 paused by owner. Depth model: Depth Anything V2 Small int8 ONNX (Apache-2.0),
   downloaded at build time with checksum. arm64-v8a only. Portrait lock is intentional (tilt maths assumes upright).
+- E-014 (2026-11-13) **Camera trace back as method 9, lab 0.4.0 (U-08).** The 0.2.0 tracing screen (controller,
+  screen, drawing and its rendered test, from revision 37b6062) is restored unchanged in its own package
+  `lab/.../tracing`, so it shares nothing with the scan but the camera feed (`trace/TraceFeed.kt`, whose changes since
+  0.2.0 are additive). Three deliberate differences from 0.2.0: results are saved as method 9 (`TRACE_LINES`); the
+  screen is padded clear of the system bars (the fix 0.3.2 gave the scan); the feed is asked for the 1× lens
+  (`widest = false`), which is what 0.2.0 used. Draft files stay separate (`trace-draft.json` vs `scan-draft.json`).
+  The owner's target picture is pixel-identical to `docs/capture-trace/trace-stills-sheet.png`. **Not built or tested
+  in this revision:** the build host could not reach Google's Android SDK and Maven downloads (E-015), so neither the
+  APK nor the rendered test ran.
+- E-015 (2026-11-13) Build host for E-014 refused connections to `dl.google.com` (Android SDK and Google Maven), so no
+  Android module could be configured. Domain code is unchanged in E-014.
 - E-013 (2026-11-11) **Camera scan, lab 0.3.0 (U-07).** Replaces the 0.2.0 tracing screen.
   - **Model:** per surface, one boundary distance for each degree of direction around the user, holding automatic
     readings plus the brush's limits (Add: reaches at least here; Subtract: ends before here; either may pin an edge).

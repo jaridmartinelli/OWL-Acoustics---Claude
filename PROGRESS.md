@@ -1,6 +1,6 @@
 # OWL Acoustics — Progress and Readiness Dashboard
 
-Last updated: 2026-11-10 (Capture Lab section) · main app sections as of 2026-10-26 · Branch `claude/new-session-7qrh7s` · Revision: see the commit that contains this file
+Last updated: 2026-11-13 (Capture Lab section) · main app sections as of 2026-10-26 · Branch `claude/new-session-7qrh7s` · Revision: see the commit that contains this file
 (artifact identity below is for that revision's debug APK).
 
 ## Readiness
@@ -85,10 +85,13 @@ Not part of the main app's acceptance rows. It exists so the owner can compare c
 |---|---|---|
 | Methods 1, 2, 4, 5, 6, 7 and the tape-measure scorecard | IMPLEMENTED | Maths BUILD-TESTED on the JVM; screens never run on a device. |
 | Method 8 · Camera scan (2026-11-11, E-013; replaces the 0.2.0 tracing screen) | IMPLEMENTED | Live automatic floor/wall/ceiling detection, Add/Subtract brush, anchors, number pad, 3D model, widest lens. Geometry model BUILD-TESTED (JVM); the screen, detection, lens choice and brush have **no rendered tests and have not been verified on a phone**. Lab 0.3.2; first phone test (owner recording, 0.3.1) showed the screen running and the mesh growing, but a spiky boundary and the header under the status bar, both addressed in 0.3.2. |
+| Method 9 · Camera trace (2026-11-13, U-08 / E-014; the 0.2.0 tracing screen beside the scan) | IMPLEMENTED | Code restored unchanged from 0.2.0 plus system-bar padding and a method-9 label. **Not compiled or tested in this revision** (build host blocked from the Android SDK, E-015); at 0.2.0 the same code passed its rendered test. Not verified on a phone. Lab 0.4.0. |
 | Method 8 · Walk mode (ARCore tracking) | PLANNED | Shown disabled in the test switches. Solver accepts tracked positions (unit-tested); the ARCore camera feed is not written. |
 | Method 8 · door/window heights | BLOCKED | Owner decision U-06 not answered. |
 | Method 8 · hand-off to the main app's 2D builder | PLANNED | The lab saves to its own scorecard only. |
 | Method 3 · server video analysis | EXCLUDED-DEFERRED | Paused by the owner. |
+
+No 0.4.0-lab APK has been built yet (E-015: build host blocked from the Android SDK); the newest built lab APK is 0.3.2 below, which has no method 9.
 
 Lab artifact (2026-11-11): `dist/OWL-Capture-Lab-0.3.2-lab-debug.apk` (not committed) · package
 `com.owlacoustics.capturelab.dev` · versionCode 5 · versionName 0.3.2-lab · arm64-v8a · debug-signed (same key as before) ·
