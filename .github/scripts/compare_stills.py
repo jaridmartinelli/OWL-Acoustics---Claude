@@ -44,6 +44,11 @@ for ref in sorted(glob.glob("docs/capture-trace/[0-9][0-9]-*.png")):
     if not os.path.exists(new):
         print(f"| {name} | | **not rendered** | |"); missing += 1; continue
     rw, rh, rp = read_png(ref); nw, nh, np_ = read_png(new)
+    scaled = ""
+    if (nw, nh) == (2 * rw, 2 * rh):  # the test renders at xhdpi (2 px per dp); the approved stills are stored at 1 px per dp
+        np_ = [[tuple((np_[2*y][2*x][k] + np_[2*y][2*x+1][k] + np_[2*y+1][2*x][k] + np_[2*y+1][2*x+1][k] + 2) // 4 for k in range(3))
+                for x in range(rw)] for y in range(rh)]
+        nw, nh, scaled = rw, rh, " (halved)"
     if (rw, rh) != (nw, nh):
         print(f"| {name} | {rw}x{rh} -> {nw}x{nh} | **size changed** | |"); continue
     n, x0, y0, x1, y1 = 0, rw, rh, -1, -1
@@ -52,5 +57,5 @@ for ref in sorted(glob.glob("docs/capture-trace/[0-9][0-9]-*.png")):
             if max(abs(p[0] - q[0]), abs(p[1] - q[1]), abs(p[2] - q[2])) > 24:
                 n += 1; x0, y0, x1, y1 = min(x0, x), min(y0, y), max(x1, x), max(y1, y)
     area = f"({x0},{y0})-({x1},{y1})" if n else "none"
-    print(f"| {name} | {rw}x{rh} | {n} ({100 * n / (rw * rh):.2f}%) | {area} |")
+    print(f"| {name} | {rw}x{rh}{scaled} | {n} ({100 * n / (rw * rh):.2f}%) | {area} |")
 sys.exit(1 if missing else 0)
