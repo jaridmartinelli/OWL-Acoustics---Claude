@@ -18,6 +18,7 @@ enum class Method(val title: String, val needsAr: Boolean, val summary: String) 
     AR_AUTO("5 · ARCore auto walls", true, "Pan across every wall; ARCore detects wall planes and the outline is built automatically."),
     SPIN_DEPTH("6 · Spin: AI depth", false, "Turn on the spot; an on-device depth model estimates wall distance, scaled by the floor."),
     TRACE("8 · Camera scan", false, "The app finds floor, walls and ceiling as you turn; a brush adds or takes away where it is wrong."),
+    TRACE_LINES("9 · Camera trace", false, "Freeze a view and trace the floor and ceiling lines with a finger; lines cling to edges and stay pinned to the room."),
 }
 
 @Serializable
