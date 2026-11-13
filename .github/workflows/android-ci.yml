@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -42,9 +42,14 @@ jobs:
         if: ${{ !cancelled() }}
         run: ./gradlew $GRADLE_ARGS :app:lintDebug :lab:lintDebug
 
+      - name: Compare trace screens with approved design stills
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/compare_stills.py | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Summary
         if: ${{ !cancelled() }}
-        run: python3 .github/scripts/summary.py >> "$GITHUB_STEP_SUMMARY"
+        # Also printed to the log, which is readable through the API when artifacts are not.
+        run: python3 .github/scripts/summary.py | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Upload APKs
         if: ${{ !cancelled() }}

@@ -34,6 +34,7 @@ smoke() { # $1 name, $2 package, $3 apk
   # 400 seeded random touches and swipes, no system keys, so a failure can be replayed with the same seed
   adb shell monkey -p "$2" -s 4242 --throttle 150 --pct-syskeys 0 --pct-appswitch 0 --pct-anyevent 0 -v 400 > "$out/monkey.txt" 2>&1
   sleep 3
+  echo "monkey ($1): $(grep -E 'Events injected|aborted|No activities|CRASH|NOT RESPONDING' "$out/monkey.txt" | tr '\n' ' ')"
   adb exec-out screencap -p > "$out/2-after-taps.png"
   check "$2" taps "$out" || return 1
 }
