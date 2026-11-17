@@ -20,7 +20,7 @@ measured accuracy figure for our use.
 | 9 | VGGT-Long / VGGT-SLAM | Long walk-through videos | Many frames, whole homes | Built for kilometre-scale outdoor runs; extra complexity; a single room usually fits VGGT directly | Follows VGGT (to verify) |
 | 10 | CGAL shape detection / PolyFit | Higher-quality planes, watertight simple models | Region growing found 100% of shapes vs 78% for efficient RANSAC in CGAL's example | GPL: commercial use needs a paid licence; C++ | GPL / commercial |
 
-## Ruled out for a commercial app
+## Not ranked above (licence concerns, shown for information; owner decides, U-08)
 
 SpatialLM (weights CC BY-NC), SceneScript (research only), Pi3 weights (CC BY-NC), MapAnything default checkpoint
 (CC BY-NC), original VGGT-1B (non-commercial), Depth Anything 3 Large/Giant any-view (CC BY-NC). DUSt3R/MASt3R,
