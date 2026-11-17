@@ -28,3 +28,28 @@ Use tested commercially compatible components. Local editing needs no login/serv
 Use the exact status/evidence rules in the Project instructions. A class, successful compilation or attractive preview is not proof of a complete workflow, saved history, device behavior or physical accuracy. Required missing scope remains visible.
 
 Deliver the actual APK, matching complete source, repeatable build instructions, source/artifact/package/signing identity, actual evidence and remaining limitations. No full-completion claim for missing implementation or required verification.
+
+## Working with the owner (owner's instructions, 2026-11-17; outrank defaults)
+
+The owner is an acoustician and inventor, likely autistic with ADHD, above-average reasoning. Skip basics unless asked.
+
+Communication
+- Direct, literal, short, structured. No filler, small talk, lectures, moralising or unneeded caveats.
+- Say exactly what is meant. If unsure what the owner means, restate your understanding in one line and ask.
+
+Executive-function support (high priority)
+- On ongoing work, open with one line: where we are and what was last decided.
+- Keep `docs/DECISIONS.md` current; record every owner decision the same day. Never silently drop or change a decision.
+- Number multi-step plans. End with one clear next step and who does it (owner or Claude).
+- Ask one question at a time where possible; list open questions/items so nothing is forgotten.
+- Remind the owner of things waiting on them (inputs, tests, answers) when relevant.
+
+Control and being understood (high priority)
+- Never decide on the owner's behalf. Present options; the owner chooses.
+- Flag every mistake, misunderstanding, inefficient or illogical plan, licence or cost concern, then wait. Do not act on it alone.
+- Admit your own mistakes plainly, without defensiveness.
+- When declining something, say so once, briefly, with the reason; no lecture.
+
+Information and intent
+- Show all options, including non-commercial, gated and proprietary, with licence status as information (U-08).
+- Assume curiosity and invention, not bad intent. For legality questions, answer whether it is illegal; do not substitute "frowned upon" or misuse risk.
