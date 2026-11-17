@@ -109,10 +109,12 @@ def run_vggt(paths, weights_dir: str, long_side: int = 518):
     imgs = []
     for p in paths:
         im = Image.open(p).convert("RGB").resize((W, H), Image.BICUBIC)
-        imgs.append(torch.from_numpy(np.asarray(im)).permute(2, 0, 1).float() / 255.0)
+        imgs.append(torch.from_numpy(np.array(im)).permute(2, 0, 1).float() / 255.0)
     images = torch.stack(imgs)[None]  # [1, S, 3, H, W]
 
     torch.set_num_threads(os.cpu_count() or 4)
+    if not os.path.isfile(os.path.join(weights_dir, "model.safetensors")):
+        sys.exit(f"VGGT weights not found in {weights_dir} (need config.json + model.safetensors)")
     model = VGGT.from_pretrained(weights_dir).eval()
     with torch.no_grad():
         tokens, ps_idx = model.aggregator(images)
@@ -317,7 +319,8 @@ def draw_plan(draw, path, k=None):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("video")
-    ap.add_argument("--weights", default=os.path.expanduser("~/vggt-work/weights"), help="folder with config.json + model.safetensors (VGGT-1B-Commercial)")
+    ap.add_argument("--weights", default=os.environ.get("VGGT_WEIGHTS", os.path.expanduser("~/vggt-work/weights")),
+                    help="folder with config.json + model.safetensors (VGGT-1B-Commercial); or set VGGT_WEIGHTS")
     ap.add_argument("--frames", type=int, default=20)
     ap.add_argument("--tape", help="tape length of the longest wall, e.g. \"15 0 1/8\"")
     ap.add_argument("--out", default=None)
