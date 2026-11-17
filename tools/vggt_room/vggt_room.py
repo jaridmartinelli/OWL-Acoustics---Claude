@@ -70,7 +70,7 @@ def pick_frames(video: str, n: int, outdir: str, long_side: int = 1280):
         ok, frame = cap.read()
         if not ok:
             break
-        if i % 2 == 0:
+        if total <= 4 * n or i % 2 == 0:
             slot = min(n - 1, int(i * n / max(total, 1))) if total else i // 15
             small = cv2.resize(frame, None, fx=0.25, fy=0.25)
             sharp = cv2.Laplacian(cv2.cvtColor(small, cv2.COLOR_BGR2GRAY), cv2.CV_64F).var()
@@ -193,8 +193,12 @@ def room_from_points(pts, conf, cols, extr, keep_frac=0.55):
     if hc is not None:
         H = (hc - hf) if hf is not None else (hc - cam_h) * 2
         band = (h > hc - 0.30 * H) & (h < hc - 0.025 * H)
+    elif hf is not None:
+        # no ceiling in view: use wall above most furniture (beds, desks, dressers), up to a bit over the phone
+        ch = cam_h - hf
+        band = (h > hf + 0.75 * ch) & (h < hf + 1.6 * ch)
     else:
-        band = (h > cam_h) & (h < cam_h + 0.4 * scale)
+        band = (h > cam_h - 0.1 * scale) & (h < cam_h + 0.4 * scale)
     wall = pcd.select_by_index(np.where(band)[0])
     wall.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(radius=0.03 * scale, max_nn=30))
     N = np.asarray(wall.normals)
@@ -318,17 +322,21 @@ def draw_plan(draw, path, k=None):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("video")
+    ap.add_argument("video", help="room video, or a folder of photos")
     ap.add_argument("--weights", default=os.environ.get("VGGT_WEIGHTS", os.path.expanduser("~/vggt-work/weights")),
                     help="folder with config.json + model.safetensors (VGGT-1B-Commercial); or set VGGT_WEIGHTS")
     ap.add_argument("--frames", type=int, default=20)
     ap.add_argument("--tape", help="tape length of the longest wall, e.g. \"15 0 1/8\"")
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
-    out = a.out or os.path.join(os.path.dirname(os.path.abspath(a.video)), os.path.splitext(os.path.basename(a.video))[0] + "-vggt")
+    out = a.out or os.path.abspath(a.video).rstrip("/") + "-vggt"
     os.makedirs(out, exist_ok=True)
     t0 = time.time()
-    paths, nframes = pick_frames(a.video, a.frames, os.path.join(out, "frames"))
+    if os.path.isdir(a.video):
+        paths = sorted(os.path.join(a.video, f) for f in os.listdir(a.video) if f.lower().endswith((".jpg", ".jpeg", ".png")))[: a.frames]
+        nframes = len(paths)
+    else:
+        paths, nframes = pick_frames(a.video, a.frames, os.path.join(out, "frames"))
     t1 = time.time()
     print(f"picked {len(paths)} of {nframes} frames in {t1 - t0:.0f}s", flush=True)
     pts, conf, cols, extr, intr = run_vggt(paths, a.weights)
