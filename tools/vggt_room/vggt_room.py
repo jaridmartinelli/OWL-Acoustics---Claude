@@ -127,7 +127,54 @@ def run_vggt(paths, weights_dir: str, long_side: int = 518):
     conf = conf.squeeze(0).numpy()
     pts = unproject_depth_map_to_point_map(depth, extr, intr)  # [S, H, W, 3]
     cols = images.squeeze(0).permute(0, 2, 3, 1).numpy()
-    return pts, conf, cols, extr, intr
+    return pts, conf, cols, extr, intr, depth[..., 0]
+
+
+# ---------------------------------------------------------------- MapAnything (real-world size)
+
+def run_mapanything(paths, weights_dir: str):
+    """Meta's MapAnything on the same frames. Its output is in metres; returns points, confidence, colours,
+    world-to-camera matrices and depth, in the same layout as run_vggt."""
+    import torch
+    from mapanything.models import MapAnything
+    from mapanything.utils.image import load_images
+
+    if not os.path.isfile(os.path.join(weights_dir, "model.safetensors")):
+        sys.exit(f"MapAnything weights not found in {weights_dir}")
+    torch.set_num_threads(os.cpu_count() or 4)
+    model = MapAnything.from_pretrained(weights_dir).eval()
+    views = load_images(list(paths))
+    with torch.no_grad():
+        preds = model.infer(views, memory_efficient_inference=True, use_amp=False, apply_mask=True, mask_edges=True)
+    pts, conf, cols, extr, depth = [], [], [], [], []
+    for p in preds:
+        pts.append(p["pts3d"][0].numpy())
+        m = p["mask"][0, ..., 0].numpy().astype(bool)
+        c = p["conf"][0].numpy().copy()
+        c[~m] = 0
+        conf.append(c)
+        cols.append(p["img_no_norm"][0].numpy())
+        c2w = p["camera_poses"][0].numpy()
+        R = c2w[:3, :3].T
+        extr.append(np.concatenate([R, (-R @ c2w[:3, 3])[:, None]], axis=1))
+        depth.append(p["depth_z"][0, ..., 0].numpy())
+    return np.stack(pts), np.stack(conf), np.stack(cols), np.stack(extr), np.stack(depth)
+
+
+def depth_scale(d_shape, c_shape, d_metric, c_metric):
+    """Metres per VGGT unit: median ratio of the two depth maps over pixels both are confident about."""
+    ratios = []
+    for i in range(len(d_shape)):
+        a = d_shape[i]
+        b = cv2.resize(d_metric[i], (a.shape[1], a.shape[0]), interpolation=cv2.INTER_NEAREST)
+        cb = cv2.resize(c_metric[i], (a.shape[1], a.shape[0]), interpolation=cv2.INTER_NEAREST)
+        ok = (a > 1e-6) & (b > 1e-6) & (c_shape[i] > np.quantile(c_shape[i], 0.5)) & (cb > np.quantile(cb[cb > 0], 0.5) if (cb > 0).any() else False)
+        if ok.sum() > 100:
+            ratios.append(b[ok] / a[ok])
+    if not ratios:
+        return None
+    r = np.concatenate(ratios)
+    return float(np.median(r)), float(np.quantile(r, 0.75) / np.quantile(r, 0.25))
 
 
 # ---------------------------------------------------------------- geometry
@@ -254,7 +301,7 @@ def room_from_points(pts, conf, cols, extr, keep_frac=0.55):
     return res, draw
 
 
-def scaled(res, tape_m):
+def scaled(res, tape_m, metres_per_unit=None, note=""):
     out = {}
     lx, ly = res.get("length_x"), res.get("length_y")
     H = res.get("ceiling_minus_floor")
@@ -272,6 +319,8 @@ def scaled(res, tape_m):
         out["from_tape"] = block(tape_m / max(lx, ly), f"longest wall = your tape {fmt_ft(tape_m)}")
     if H:
         out["from_8ft_ceiling"] = block(8 * FT / H, "ceiling assumed 8' 0\"")
+    if metres_per_unit:
+        out["from_mapanything"] = block(metres_per_unit, "real-world size from MapAnything" + note)
     return out
 
 
@@ -328,6 +377,8 @@ def main():
     ap.add_argument("--frames", type=int, default=20)
     ap.add_argument("--tape", help="tape length of the longest wall, e.g. \"15 0 1/8\"")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--mapanything", default=os.environ.get("MAPANYTHING_WEIGHTS"),
+                    help="folder with MapAnything config.json + model.safetensors; adds real-world size and a MapAnything-only room")
     a = ap.parse_args()
     out = a.out or os.path.abspath(a.video).rstrip("/") + "-vggt"
     os.makedirs(out, exist_ok=True)
@@ -339,23 +390,43 @@ def main():
         paths, nframes = pick_frames(a.video, a.frames, os.path.join(out, "frames"))
     t1 = time.time()
     print(f"picked {len(paths)} of {nframes} frames in {t1 - t0:.0f}s", flush=True)
-    pts, conf, cols, extr, intr = run_vggt(paths, a.weights)
+    pts, conf, cols, extr, intr, vdepth = run_vggt(paths, a.weights)
     t2 = time.time()
     print(f"VGGT on CPU: {t2 - t1:.0f}s", flush=True)
     res, draw = room_from_points(pts, conf, cols, extr)
     tape_m = parse_feet(a.tape) if a.tape else None
-    report = {"video": os.path.basename(a.video), "seconds": {"frames": round(t1 - t0), "vggt": round(t2 - t1), "geometry": round(time.time() - t2)},
-              "model_units": res, "in_feet": scaled(res, tape_m) if draw else {}}
+    seconds = {"frames": round(t1 - t0), "vggt": round(t2 - t1), "geometry": round(time.time() - t2)}
+    mpu = None; ma_report = None; note = ""
+    if a.mapanything:
+        t3 = time.time()
+        mpts, mconf, mcols, mextr, mdepth = run_mapanything(paths, a.mapanything)
+        seconds["mapanything"] = round(time.time() - t3)
+        print(f"MapAnything on CPU: {seconds['mapanything']}s", flush=True)
+        ds = depth_scale(vdepth, conf, mdepth, mconf)
+        if ds:
+            mpu, spread = ds
+            note = f" (depth ratio spread x{spread:.2f})"
+        mres, mdraw = room_from_points(mpts, mconf, mcols, mextr)
+        ma_report = {"metres": mres, "in_feet": scaled(mres, tape_m, 1.0, " (its own room, no VGGT)") if mdraw else {}}
+        if mdraw:
+            draw_plan(mdraw, os.path.join(out, "plan_mapanything.png"), 1.0)
+    report = {"video": os.path.basename(a.video), "seconds": seconds,
+              "model_units": res, "in_feet": scaled(res, tape_m, mpu, note) if draw else {},
+              "mapanything_only": ma_report}
     with open(os.path.join(out, "report.json"), "w") as f:
         json.dump(report, f, indent=2, default=float)
     if draw:
         k = None
-        if tape_m and res.get("length_x") and res.get("length_y"):
+        if mpu:
+            k = mpu
+        elif tape_m and res.get("length_x") and res.get("length_y"):
             k = tape_m / max(res["length_x"], res["length_y"])
         elif res.get("ceiling_minus_floor"):
             k = 8 * FT / res["ceiling_minus_floor"]
         draw_plan(draw, os.path.join(out, "plan.png"), k)
     print(json.dumps(report["in_feet"], indent=2))
+    if ma_report:
+        print("MapAnything only:", json.dumps(ma_report["in_feet"], indent=2))
     print("written to", out)
 
 

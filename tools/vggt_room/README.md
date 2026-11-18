@@ -28,6 +28,19 @@ uv pip install --no-deps -e src      # vggt pins numpy<2 / torch 2.3, which have
 # weights: config.json + model.safetensors from facebook/VGGT-1B-Commercial into ~/vggt-work/weights
 ```
 
+## Optional: MapAnything for real-world size
+
+```
+git clone --depth 1 https://github.com/facebookresearch/map-anything.git ~/vggt-work/mapanything
+uv pip install --no-deps -e ~/vggt-work/mapanything
+uv pip install hydra-core natsort orjson pillow-heif plyfile python-box trimesh uniception==0.1.7
+# weights: facebook/map-anything (CC BY-NC 4.0, most accurate) or facebook/map-anything-apache (Apache 2.0)
+python tools/vggt_room/vggt_room.py ROOM.mp4 --mapanything ~/vggt-work/weights-mapanything
+```
+
+Adds `from_mapanything` (VGGT's shape sized by MapAnything's depth) and `mapanything_only` (MapAnything's own room) to
+the report, plus `plan_mapanything.png`.
+
 ## Run
 
 ```
