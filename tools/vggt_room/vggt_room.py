@@ -142,6 +142,11 @@ def run_mapanything(paths, weights_dir: str):
     if not os.path.isfile(os.path.join(weights_dir, "model.safetensors")):
         sys.exit(f"MapAnything weights not found in {weights_dir}")
     torch.set_num_threads(os.cpu_count() or 4)
+    # MapAnything builds its image encoder from DINOv2's code via torch.hub. If that code is already in the hub cache
+    # (git clone facebookresearch/dinov2 -> ~/.cache/torch/hub/facebookresearch_dinov2_main), skip the online check.
+    if os.path.isdir(os.path.join(torch.hub.get_dir(), "facebookresearch_dinov2_main")):
+        torch.hub._parse_repo_info = lambda github: (*github.split(":")[0].split("/"), "main")
+        torch.hub._validate_not_a_forked_repo = lambda *a, **k: None
     model = MapAnything.from_pretrained(weights_dir).eval()
     views = load_images(list(paths))
     with torch.no_grad():
