@@ -121,6 +121,9 @@ def room_dims(o):
 def patch_quarot(quantvggt_dir, seed):
     import torch
     sys.path.insert(0, os.path.join(quantvggt_dir, "evaluation"))
+    if "tkinter" not in sys.modules:  # released code has an unused `from tkinter import NO`
+        import types
+        sys.modules["tkinter"] = types.SimpleNamespace(NO="no")
     import quarot.quarot_linear as ql
     from quarot.quarot_utils import random_hadamard_matrix
     cache = {}
@@ -200,6 +203,7 @@ def main():
     t0 = time.time()
     log = lambda *x: print(f"[{time.time() - t0:7.0f}s]", *x, flush=True)
 
+    ql = patch_quarot(a.quantvggt, a.seed)
     model = VGGT.from_pretrained(a.weights).eval()
     model.track_head = None  # OWL does not use point tracking
 
@@ -212,7 +216,6 @@ def main():
         full.append(infer(model, img))
         log("full precision:", folder, len(paths), "frames")
 
-    ql = patch_quarot(a.quantvggt, a.seed)
     layers = quantise_blocks(model, ql, a.wbits, a.abits, rotate=not a.no_rotation)
     log(f"wrapped {len(layers)} linear layers (W{a.wbits}A{a.abits}, rotation={'off' if a.no_rotation else 'on'})")
 
