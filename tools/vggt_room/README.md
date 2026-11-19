@@ -41,6 +41,36 @@ python tools/vggt_room/vggt_room.py ROOM.mp4 --mapanything ~/vggt-work/weights-m
 Adds `from_mapanything` (VGGT's shape sized by MapAnything's depth) and `mapanything_only` (MapAnything's own room) to
 the report, plus `plan_mapanything.png`.
 
+### Comparing the two MapAnything checkpoints (licence vs accuracy)
+
+| Checkpoint | Licence (model card, read 2026-11-19) | Training data (paper, arXiv 2509.13414) |
+|---|---|---|
+| `facebook/map-anything` | CC BY-NC 4.0: non-commercial, test only (U-09) | 13 datasets |
+| `facebook/map-anything-apache` | Apache 2.0: commercial use allowed | 6 of those 13 |
+| `facebook/map-anything-apache-v1` | Apache 2.0, older (Sept 2025) | not used here |
+
+Meta's paper says the Apache model shows "a decrease in performance" but publishes no side-by-side numbers in its text,
+so the gap has to be measured. Put each checkpoint in its own folder and give `--mapanything` once per checkpoint, with a
+label; both run on the same frames:
+
+```
+python tools/vggt_room/vggt_room.py ROOM.mp4 --tape "15 0 1/8" \
+    --mapanything nc=~/vggt-work/weights-mapanything \
+    --mapanything apache=~/vggt-work/weights-mapanything-apache
+```
+
+The report then has `from_mapanything_<label>` blocks, `mapanything_only.<label>`, a `plan_mapanything_<label>.png` per
+checkpoint, and `checkpoint_comparison`: for each checkpoint, the room in metres two ways (VGGT's shape sized by that
+checkpoint, and that checkpoint's own room), the percentage difference from the first checkpoint, and with `--tape` the
+longest-wall error against the tape. Only the tape rows measure accuracy; the difference between checkpoints does not.
+One room is one sample. With one `--mapanything` the report is laid out exactly as before.
+
+Offline check of this comparison (no weights; a synthetic 15' x 12' room and two fake checkpoints, one 3% too large):
+
+```
+python tools/vggt_room/test_compare_checkpoints.py
+```
+
 ## Run
 
 ```

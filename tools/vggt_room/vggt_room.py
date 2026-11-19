@@ -182,6 +182,66 @@ def depth_scale(d_shape, c_shape, d_metric, c_metric):
     return float(np.median(r)), float(np.quantile(r, 0.75) / np.quantile(r, 0.25))
 
 
+# ---------------------------------------------------------------- comparing MapAnything checkpoints
+
+def parse_checkpoints(items):
+    """['nc=/w/a', '/w/b'] -> [('nc', '/w/a'), ('b', '/w/b')]. Labels must be unique."""
+    out = []
+    for it in items or []:
+        if "=" in it and not os.path.isdir(it):
+            label, d = it.split("=", 1)
+        else:
+            label, d = os.path.basename(os.path.normpath(it)) or "mapanything", it
+        d = os.path.expanduser(d)
+        if any(label == l for l, _ in out):
+            sys.exit(f"--mapanything label used twice: {label}")
+        out.append((label, d))
+    return out
+
+
+def _dims(res, k):
+    """Room sizes in metres from a room_from_points result and a metres-per-unit factor."""
+    d = {}
+    for key, name in (("length_x", "wall_a"), ("length_y", "wall_b"), ("ceiling_minus_floor", "ceiling_height"),
+                      ("camera_above_floor", "phone_height")):
+        if res and res.get(key):
+            d[name] = res[key] * k
+    if d.get("wall_a") and d.get("wall_b"):
+        d["longest_wall"] = max(d["wall_a"], d["wall_b"])
+    return d
+
+
+def compare_checkpoints(vggt_res, runs, tape_m=None):
+    """Same frames, several MapAnything checkpoints. For each: room sizes in metres two ways
+    (VGGT's shape sized by that checkpoint's depth, and that checkpoint's own room), the percentage difference from
+    the first checkpoint, and, with a tape, the error of the longest wall against the tape.
+    The first checkpoint is the reference only for the differences; the tape is the only ground truth."""
+    ref = None
+    table = []
+    for r in runs:
+        row = {"label": r["label"], "weights": r["weights"]}
+        if r.get("depth_scale"):
+            row["metres_per_vggt_unit"] = r["depth_scale"][0]
+            row["depth_ratio_spread"] = r["depth_scale"][1]
+            row["vggt_shape_m"] = _dims(vggt_res, r["depth_scale"][0])
+        row["own_room_m"] = _dims(r["metres"], 1.0) if r.get("ok") else {}
+        table.append(row)
+    ref = table[0]
+    for row in table:
+        for kind in ("vggt_shape_m", "own_room_m"):
+            a, b = ref.get(kind) or {}, row.get(kind) or {}
+            row[kind.replace("_m", "_pct_vs_" + ref["label"])] = {
+                k: 100.0 * (b[k] - a[k]) / a[k] for k in b if k in a and a[k]}
+            if tape_m and b.get("longest_wall"):
+                err = b["longest_wall"] - tape_m
+                row[kind.replace("_m", "_longest_wall_vs_tape")] = {
+                    "error_inches": err / 0.0254, "error_pct": 100.0 * err / tape_m}
+    return {"reference": ref["label"],
+            "tape_longest_wall_m": tape_m,
+            "note": "Differences between checkpoints are not accuracy; only the tape rows are. One room is one sample.",
+            "checkpoints": table}
+
+
 # ---------------------------------------------------------------- geometry
 
 def unit(v):
@@ -383,8 +443,10 @@ def main():
     ap.add_argument("--frames", type=int, default=20)
     ap.add_argument("--tape", help="tape length of the longest wall, e.g. \"15 0 1/8\"")
     ap.add_argument("--out", default=None)
-    ap.add_argument("--mapanything", default=os.environ.get("MAPANYTHING_WEIGHTS"),
-                    help="folder with MapAnything config.json + model.safetensors; adds real-world size and a MapAnything-only room")
+    ap.add_argument("--mapanything", action="append", default=None, metavar="[LABEL=]DIR",
+                    help="folder with MapAnything config.json + model.safetensors; adds real-world size and a MapAnything-only "
+                         "room. Give it twice (e.g. nc=DIR apache=DIR) to compare checkpoints on the same frames; "
+                         "or set MAPANYTHING_WEIGHTS")
     a = ap.parse_args()
     out = a.out or os.path.abspath(a.video).rstrip("/") + "-vggt"
     os.makedirs(out, exist_ok=True)
@@ -403,22 +465,44 @@ def main():
     tape_m = parse_feet(a.tape) if a.tape else None
     seconds = {"frames": round(t1 - t0), "vggt": round(t2 - t1), "geometry": round(time.time() - t2)}
     mpu = None; ma_report = None; note = ""
-    if a.mapanything:
+    checkpoints = parse_checkpoints(a.mapanything or ([os.environ["MAPANYTHING_WEIGHTS"]] if os.environ.get("MAPANYTHING_WEIGHTS") else []))
+    runs = []
+    for label, wdir in checkpoints:
         t3 = time.time()
-        mpts, mconf, mcols, mextr, mdepth = run_mapanything(paths, a.mapanything)
-        seconds["mapanything"] = round(time.time() - t3)
-        print(f"MapAnything on CPU: {seconds['mapanything']}s", flush=True)
+        mpts, mconf, mcols, mextr, mdepth = run_mapanything(paths, wdir)
+        secs = round(time.time() - t3)
+        print(f"MapAnything [{label}] on CPU: {secs}s", flush=True)
         ds = depth_scale(vdepth, conf, mdepth, mconf)
-        if ds:
-            mpu, spread = ds
-            note = f" (depth ratio spread x{spread:.2f})"
         mres, mdraw = room_from_points(mpts, mconf, mcols, mextr)
-        ma_report = {"metres": mres, "in_feet": scaled(mres, tape_m, 1.0, " (its own room, no VGGT)") if mdraw else {}}
         if mdraw:
-            draw_plan(mdraw, os.path.join(out, "plan_mapanything.png"), 1.0)
+            suffix = "" if len(checkpoints) == 1 else f"_{label}"
+            draw_plan(mdraw, os.path.join(out, f"plan_mapanything{suffix}.png"), 1.0)
+        runs.append({"label": label, "weights": wdir, "seconds": secs, "depth_scale": ds, "metres": mres, "ok": mdraw is not None})
+    if len(runs) == 1:
+        # one checkpoint: same report layout as before
+        r = runs[0]
+        seconds["mapanything"] = r["seconds"]
+        if r["depth_scale"]:
+            mpu, spread = r["depth_scale"]
+            note = f" (depth ratio spread x{spread:.2f})"
+        ma_report = {"metres": r["metres"], "in_feet": scaled(r["metres"], tape_m, 1.0, " (its own room, no VGGT)") if r["ok"] else {}}
+    in_feet = scaled(res, tape_m, mpu, note) if draw else {}
+    if len(runs) > 1:
+        ma_report = {}
+        for r in runs:
+            seconds[f"mapanything_{r['label']}"] = r["seconds"]
+            n = f" [{r['label']}]"
+            if r["depth_scale"] and draw:
+                in_feet[f"from_mapanything_{r['label']}"] = scaled(res, None, r["depth_scale"][0],
+                                                                   f"{n} (depth ratio spread x{r['depth_scale'][1]:.2f})")["from_mapanything"]
+            ma_report[r["label"]] = {"metres": r["metres"],
+                                     "in_feet": scaled(r["metres"], tape_m, 1.0, f"{n} (its own room, no VGGT)") if r["ok"] else {}}
+        mpu = runs[0]["depth_scale"][0] if runs[0]["depth_scale"] else None
     report = {"video": os.path.basename(a.video), "seconds": seconds,
-              "model_units": res, "in_feet": scaled(res, tape_m, mpu, note) if draw else {},
+              "model_units": res, "in_feet": in_feet,
               "mapanything_only": ma_report}
+    if len(runs) > 1:
+        report["checkpoint_comparison"] = compare_checkpoints(res if draw else None, runs, tape_m)
     with open(os.path.join(out, "report.json"), "w") as f:
         json.dump(report, f, indent=2, default=float)
     if draw:
@@ -431,8 +515,10 @@ def main():
             k = 8 * FT / res["ceiling_minus_floor"]
         draw_plan(draw, os.path.join(out, "plan.png"), k)
     print(json.dumps(report["in_feet"], indent=2))
-    if ma_report:
+    if ma_report and len(runs) == 1:
         print("MapAnything only:", json.dumps(ma_report["in_feet"], indent=2))
+    if "checkpoint_comparison" in report:
+        print("Checkpoint comparison:", json.dumps(report["checkpoint_comparison"], indent=2, default=float))
     print("written to", out)
 
 
