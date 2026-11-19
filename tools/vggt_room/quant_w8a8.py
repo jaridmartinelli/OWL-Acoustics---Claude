@@ -232,6 +232,8 @@ def main():
     results = []
     for (folder, paths, img), f in zip(evals, full):
         q = infer(model, img)
+        np.savez_compressed(os.path.join(a.out, f"outputs_{len(results)}.npz"),
+                            **{f"full_{k}": v for k, v in f.items()}, **{f"q_{k}": v for k, v in q.items()})
         r = {"folder": folder, "frames": len(paths), "vs_full_precision": compare(f, q),
              "room_full": room_dims(f), "room_quantised": room_dims(q)}
         rf, rq = r["room_full"], r["room_quantised"]

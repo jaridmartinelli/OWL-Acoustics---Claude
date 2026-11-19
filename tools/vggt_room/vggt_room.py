@@ -188,9 +188,10 @@ def unit(v):
     return v / (np.linalg.norm(v) + 1e-12)
 
 
-def room_from_points(pts, conf, cols, extr, keep_frac=0.55):
+def room_from_points(pts, conf, cols, extr, keep_frac=0.55, seed=0):
     import open3d as o3d
 
+    o3d.utility.random.seed(seed)  # repeatable plane fitting (RANSAC)
     S = pts.shape[0]
     # keep the more confident half of the pixels
     thr = np.quantile(conf, 1 - keep_frac)
