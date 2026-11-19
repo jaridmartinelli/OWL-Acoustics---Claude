@@ -8,3 +8,4 @@ local.properties
 /signing/*.keystore
 /signing/keystore.properties
 /dist/
+__pycache__/
