@@ -1,0 +1,146 @@
+{
+  "setting": "W8A8 simulated, per-output-channel weights, dynamic per-token activations",
+  "rotation": false,
+  "smoothing": "paper Eq. 6 (rotated W)",
+  "hadamard": "one seeded matrix per input size, shared",
+  "learned_clipping": false,
+  "quantised": "aggregator frame + global blocks (all linear layers); DINOv2 embed, attention matmuls and heads full precision",
+  "weights": "/home/user/vggt-work/weights",
+  "calibration": [
+    {
+      "folder": "/home/user/vggt-work/src/examples/kitchen/images",
+      "frames": [
+        "00.png",
+        "03.png",
+        "06.png",
+        "09.png",
+        "12.png",
+        "15.png",
+        "18.png",
+        "21.png"
+      ]
+    },
+    {
+      "folder": "/home/user/vggt-work/src/examples/kitchen/images",
+      "frames": [
+        "01.png",
+        "04.png",
+        "07.png",
+        "10.png",
+        "13.png",
+        "16.png",
+        "19.png",
+        "22.png"
+      ]
+    },
+    {
+      "folder": "/home/user/vggt-work/src/examples/kitchen/images",
+      "frames": [
+        "02.png",
+        "05.png",
+        "08.png",
+        "11.png",
+        "14.png",
+        "17.png",
+        "20.png",
+        "23.png"
+      ]
+    },
+    {
+      "folder": "/home/user/vggt-work/src/examples/llff_fern/images",
+      "frames": [
+        "000.png",
+        "002.png",
+        "004.png",
+        "006.png",
+        "008.png",
+        "010.png",
+        "012.png",
+        "014.png"
+      ]
+    },
+    {
+      "folder": "/home/user/vggt-work/src/examples/llff_fern/images",
+      "frames": [
+        "001.png",
+        "003.png",
+        "005.png",
+        "007.png",
+        "009.png",
+        "011.png",
+        "013.png",
+        "015.png"
+      ]
+    },
+    {
+      "folder": "/home/user/vggt-work/src/examples/llff_flower/images",
+      "frames": [
+        "000.png",
+        "003.png",
+        "006.png",
+        "009.png",
+        "012.png",
+        "015.png",
+        "018.png",
+        "021.png"
+      ]
+    },
+    {
+      "folder": "/home/user/vggt-work/src/examples/llff_flower/images",
+      "frames": [
+        "001.png",
+        "004.png",
+        "007.png",
+        "010.png",
+        "013.png",
+        "016.png",
+        "019.png",
+        "022.png"
+      ]
+    },
+    {
+      "folder": "/home/user/vggt-work/src/examples/llff_flower/images",
+      "frames": [
+        "002.png",
+        "005.png",
+        "008.png",
+        "011.png",
+        "014.png",
+        "017.png",
+        "020.png",
+        "023.png"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "folder": "/home/user/vggt-work/src/examples/room/images",
+      "frames": 8,
+      "vs_full_precision": {
+        "camera_rotation_deg_median": 0.23573394119739532,
+        "camera_rotation_deg_max": 0.3140352964401245,
+        "camera_translation_rel_median": 0.018140194937586784,
+        "depth_rel_diff_median": 0.001170456875115633,
+        "depth_rel_diff_p90": 0.0025249063037335873,
+        "points_diff_rel_scene_median": 0.008167102621712056,
+        "points_diff_rel_scene_p90": 0.01271697509109326
+      },
+      "room_full": {
+        "length_x": 1.707068338100822,
+        "length_y": 1.9818112413399636,
+        "camera_above_floor": 0.7960794870605313
+      },
+      "room_quantised": {
+        "length_x": 1.712800520666172,
+        "length_y": 1.9865885485774109,
+        "camera_above_floor": 0.7969461547709377
+      },
+      "room_change_pct": {
+        "length_x": 0.3357910423039823,
+        "length_y": 0.2410576314128286
+      }
+    }
+  ],
+  "seconds": 724,
+  "note": "Comparison is against full-precision VGGT on the same frames, not against tape measurements."
+}

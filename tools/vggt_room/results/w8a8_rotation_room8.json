@@ -126,21 +126,21 @@
         "points_diff_rel_scene_p90": 0.0029715118528211605
       },
       "room_full": {
-        "length_x": 1.7069936156153185,
-        "length_y": 1.9818234860973991,
-        "camera_above_floor": 0.7961863038133984
+        "length_x": 1.707068338100822,
+        "length_y": 1.9818112413399636,
+        "camera_above_floor": 0.7960794870605313
       },
       "room_quantised": {
-        "length_x": 1.7093437787777908,
-        "length_y": 1.9702604844308227,
-        "camera_above_floor": 0.7971609546626787
+        "length_x": 1.7098212379218147,
+        "length_y": 1.9702098665127274,
+        "camera_above_floor": 0.7968455248608945
       },
       "room_change_pct": {
-        "length_x": 0.1376784975042284,
-        "length_y": -0.5834526509394765
+        "length_x": 0.1612647695203227,
+        "length_y": -0.5853925230231344
       }
     }
   ],
-  "seconds": 1026,
+  "seconds": 1084,
   "note": "Comparison is against full-precision VGGT on the same frames, not against tape measurements."
 }
